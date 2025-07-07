@@ -14,6 +14,8 @@ import faiss
 import tiktoken
 import uuid
 import shutil
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 
 # Initialize FastAPI application
 app = FastAPI(title="Enhanced AI Chat API")
@@ -257,6 +259,123 @@ async def chat_pdf(request: dict):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # Parse the URL to determine which endpoint
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
+        
+        # Set CORS headers
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        
+        if path == '/api/test':
+            response = {
+                "message": "API is working!",
+                "status": "success",
+                "endpoint": "test"
+            }
+        elif path == '/api/config':
+            # Get the base URL from environment or construct it
+            vercel_url = os.environ.get('VERCEL_URL', 'localhost:3000')
+            base_url = f"https://{vercel_url}" if vercel_url != 'localhost:3000' else f"http://{vercel_url}"
+            
+            response = {
+                "api_url": base_url,
+                "version": "1.0.0",
+                "features": ["pdf_chat", "streaming", "vector_search"],
+                "endpoint": "config"
+            }
+        else:
+            response = {
+                "error": "Endpoint not found",
+                "available_endpoints": ["/api/test", "/api/config", "/api/chat"]
+            }
+        
+        self.wfile.write(json.dumps(response).encode())
+        return
+
+    def do_POST(self):
+        # Parse the URL to determine which endpoint
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
+        
+        # Read the request body
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+        
+        try:
+            request_data = json.loads(post_data.decode('utf-8'))
+        except:
+            request_data = {}
+        
+        # Set CORS headers
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        
+        if path == '/api/chat':
+            try:
+                # Extract data from request
+                developer_message = request_data.get('developer_message', 'You are a helpful AI assistant.')
+                user_message = request_data.get('user_message', '')
+                model = request_data.get('model', 'gpt-4.1-mini')
+                api_key = request_data.get('api_key', '')
+                temperature = request_data.get('temperature', 0.7)
+                max_tokens = request_data.get('max_tokens', 2000)
+                
+                if not api_key:
+                    self.wfile.write(b"Error: API key is required")
+                    return
+                    
+                if not user_message:
+                    self.wfile.write(b"Error: User message is required")
+                    return
+                
+                # Initialize OpenAI client
+                client = OpenAI(api_key=api_key)
+                
+                # Create chat completion
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": developer_message},
+                        {"role": "user", "content": user_message}
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=False  # For simplicity, we'll return the full response
+                )
+                
+                # Get the response content
+                response_content = response.choices[0].message.content
+                
+                # Send the response
+                self.wfile.write(response_content.encode('utf-8'))
+                
+            except Exception as e:
+                error_message = f"Error: {str(e)}"
+                self.wfile.write(error_message.encode('utf-8'))
+        else:
+            self.wfile.write(b"Error: Endpoint not found")
+        
+        return
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        return
 
 # Vercel serverless function handler
 def handler(request, context):
