@@ -65,15 +65,15 @@ class handler(BaseHTTPRequestHandler):
         except:
             request_data = {}
         
-        # Set CORS headers
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
-        
         if path == '/api/chat':
+            # Set response headers for chat
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+            
             try:
                 # Extract data from request
                 developer_message = request_data.get('developer_message', 'You are a helpful AI assistant.')
@@ -117,13 +117,25 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(error_message.encode('utf-8'))
         
         elif path == '/api/upload-pdf':
+            # Set response headers for JSON
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+            
             try:
                 # For now, return a simple response since file upload is complex in serverless
                 # In a real implementation, you'd need to handle multipart form data
                 api_key = request_data.get('api_key', '')
                 
                 if not api_key:
-                    self.wfile.write(b"Error: API key is required")
+                    response = {
+                        "error": "API key is required",
+                        "status": "error"
+                    }
+                    self.wfile.write(json.dumps(response).encode())
                     return
                 
                 # Create a mock session for now
@@ -136,16 +148,28 @@ class handler(BaseHTTPRequestHandler):
                 response = {
                     "session_id": session_id,
                     "chunks_count": 1,
-                    "message": "PDF upload simulated successfully"
+                    "message": "PDF upload simulated successfully",
+                    "status": "success"
                 }
                 
                 self.wfile.write(json.dumps(response).encode())
                 
             except Exception as e:
-                error_message = f"Error: {str(e)}"
-                self.wfile.write(error_message.encode('utf-8'))
+                response = {
+                    "error": f"Error uploading PDF: {str(e)}",
+                    "status": "error"
+                }
+                self.wfile.write(json.dumps(response).encode())
         
         elif path == '/api/chat-pdf':
+            # Set response headers for chat
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+            
             try:
                 session_id = request_data.get('session_id', '')
                 message = request_data.get('message', '')
@@ -189,7 +213,19 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(error_message.encode('utf-8'))
         
         else:
-            self.wfile.write(b"Error: Endpoint not found")
+            # Set response headers for JSON error
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+            
+            response = {
+                "error": "Endpoint not found",
+                "status": "error"
+            }
+            self.wfile.write(json.dumps(response).encode())
         
         return
 
