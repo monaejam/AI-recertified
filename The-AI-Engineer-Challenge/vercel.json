@@ -12,16 +12,8 @@
     ],
     "routes": [
       {
-        "src": "/api/test",
-        "dest": "/api/test.py"
-      },
-      {
-        "src": "/api/chat",
-        "dest": "/api/chat.py"
-      },
-      {
-        "src": "/api/config",
-        "dest": "/api/config.py"
+        "src": "/api/(.*)",
+        "dest": "/api/$1.py"
       },
       {
         "handle": "filesystem"

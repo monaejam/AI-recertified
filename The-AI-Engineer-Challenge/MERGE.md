@@ -83,29 +83,45 @@ This feature adds the ability to:
    vercel
    ```
 
-# MERGE.md - Vercel Deployment Fix
+# MERGE.md - Vercel Deployment Fix (Updated)
 
 ## Changes Made
 
-This feature branch fixes the Vercel deployment routing issues and implements auto-configuration for API URLs:
+This feature branch fixes the 404 errors by restructuring the API to work properly with Vercel's serverless functions:
 
-### Backend Changes (`api/app.py`)
-- Added auto-detection of Vercel URL using `VERCEL_URL` environment variable
-- Implemented dynamic CORS configuration that works in both development and production
-- Added `/api/config` endpoint that returns the correct API URL
-- Improved error handling and logging
+### API Restructuring
+- **Split into individual serverless functions**: Created separate files for each API endpoint
+  - `api/chat.py` - Handles chat functionality
+  - `api/config.py` - Provides API configuration
+  - `api/test.py` - Simple test endpoint for verification
+- **Proper Vercel routing**: Updated `vercel.json` to route each endpoint to its specific function
+- **Simplified CORS**: Configured CORS to work with Vercel's serverless environment
 
-### Frontend Changes (`frontend/app/page.tsx`)
-- Removed hardcoded API URL dependency
-- Added auto-detection of API URL on component mount
-- Implemented fallback to local development URL
-- Added proper error handling for API connection issues
+### Key Changes
+1. **Individual API Files**: Each endpoint is now in its own file for better Vercel compatibility
+2. **Explicit Routing**: Vercel configuration now explicitly routes each API path
+3. **Test Endpoint**: Added `/api/test` for easy verification that the API is working
+4. **Simplified Dependencies**: Removed complex dependencies that were causing issues
 
-### Deployment Configuration
-- Removed conflicting `vercel.json` from `api/` directory
-- Root `vercel.json` now handles all routing properly
-- Configured proper Python and Next.js builds
-- Set up correct API route handling
+### Vercel Configuration (`vercel.json`)
+```json
+{
+  "routes": [
+    {
+      "src": "/api/test",
+      "dest": "/api/test.py"
+    },
+    {
+      "src": "/api/chat", 
+      "dest": "/api/chat.py"
+    },
+    {
+      "src": "/api/config",
+      "dest": "/api/config.py"
+    }
+  ]
+}
+```
 
 ## How to Deploy
 
@@ -115,11 +131,10 @@ From the project root directory:
 vercel deploy
 ```
 
-### Manual Deployment Steps
-1. Install Vercel CLI: `npm install -g vercel`
-2. Navigate to project root: `cd The-AI-Engineer-Challenge`
-3. Deploy: `vercel deploy`
-4. Follow the prompts to link to your Vercel project
+### Testing After Deployment
+1. Test the API is working: Visit `https://your-domain.vercel.app/api/test`
+2. You should see: `{"message": "API is working!", "status": "success"}`
+3. If that works, the frontend should also work properly
 
 ## How to Merge
 
@@ -134,7 +149,7 @@ vercel deploy
 ### Option 2: GitHub CLI
 ```bash
 # Create and merge PR
-gh pr create --title "Fix Vercel deployment routing and auto-configure API URLs" --body "Fixes NOT_FOUND errors and implements auto-configuration for seamless deployment"
+gh pr create --title "Fix 404 errors with Vercel serverless functions" --body "Restructures API into individual serverless functions for proper Vercel deployment"
 gh pr merge --squash
 ```
 
@@ -145,25 +160,32 @@ git merge feature/vercel-deployment-fix
 git push origin main
 ```
 
-## Testing After Deployment
+## Troubleshooting
 
-1. Visit your deployed Vercel URL
-2. Enter your OpenAI API key
-3. Test both regular chat and PDF upload functionality
-4. Verify that API calls work without manual configuration
+### If you still get 404 errors:
+1. **Check the test endpoint first**: Visit `/api/test` to see if the API is working
+2. **Verify Vercel deployment**: Check the Vercel dashboard for any build errors
+3. **Check function logs**: Look at the function logs in Vercel dashboard
+4. **Verify routing**: Make sure the `vercel.json` routes are correct
+
+### Common Issues:
+- **Build errors**: Check that all Python dependencies are in `requirements.txt`
+- **Function timeouts**: The functions are lightweight and should work quickly
+- **CORS issues**: CORS is configured to allow all origins for simplicity
 
 ## Key Benefits
 
-- **Zero Configuration**: No need to set environment variables manually
-- **Auto-Detection**: API URL is automatically detected in both development and production
-- **Seamless Deployment**: Works immediately after `vercel deploy`
-- **Better Error Handling**: Clear error messages for debugging
-- **CORS Fixed**: Proper cross-origin resource sharing configuration
+- **Proper Vercel Integration**: Uses Vercel's serverless function format correctly
+- **Individual Endpoints**: Each API route is isolated and easier to debug
+- **Test Endpoint**: Easy way to verify the API is working
+- **Simplified Structure**: Removed complex dependencies that were causing issues
+- **Better Error Handling**: Each function can handle errors independently
 
-## Troubleshooting
+## Next Steps
 
-If you still get NOT_FOUND errors:
-1. Check that the root `vercel.json` is properly configured
-2. Ensure both `api/app.py` and `frontend/` are in the correct locations
-3. Verify that the Vercel project is linked correctly
-4. Check Vercel deployment logs for any build errors 
+After successful deployment:
+1. Test the `/api/test` endpoint
+2. Test the chat functionality
+3. Add more endpoints as needed (PDF upload, etc.)
+4. Consider adding proper error logging
+5. Add rate limiting if needed 

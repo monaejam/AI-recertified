@@ -1,30 +1,34 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from http.server import BaseHTTPRequestHandler
+import json
 import os
 
-# Initialize FastAPI application
-app = FastAPI()
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        
+        # Get the base URL from environment or construct it
+        vercel_url = os.environ.get('VERCEL_URL', 'localhost:3000')
+        base_url = f"https://{vercel_url}" if vercel_url != 'localhost:3000' else f"http://{vercel_url}"
+        
+        response = {
+            "api_url": base_url,
+            "version": "1.0.0",
+            "features": ["pdf_chat", "streaming", "vector_search"],
+            "endpoint": "config"
+        }
+        
+        self.wfile.write(json.dumps(response).encode())
+        return
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/api/config")
-async def get_config(request: Request):
-    """Get server configuration including the base URL."""
-    base_url = str(request.base_url).rstrip('/')
-    return {
-        "api_url": base_url,
-        "version": "1.0.0",
-        "features": ["pdf_chat", "streaming", "vector_search"]
-    }
-
-# Vercel serverless function handler
-def handler(request, context):
-    """Vercel serverless function entry point."""
-    return app(request, context) 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        return 
