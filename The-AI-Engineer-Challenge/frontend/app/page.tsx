@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap, Upload, FileText } from 'lucide-react'
 
+// API base URL configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
+
 interface Message {
   id: string
   content: string
@@ -59,13 +62,14 @@ export default function Home() {
     formData.append('file', file)
 
     try {
-      const response = await fetch(`/api/upload-pdf?api_key=${apiKey}`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload-pdf?api_key=${apiKey}`, {
         method: 'POST',
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload PDF')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || 'Failed to upload PDF')
       }
 
       const data = await response.json()
@@ -77,11 +81,12 @@ export default function Home() {
         role: 'assistant',
         timestamp: new Date()
       }])
-    } catch (error) {
-      console.error('Error:', error)
+    } catch (err) {
+      console.error('Error:', err)
+      const error = err as Error
       setMessages([{
         id: Date.now().toString(),
-        content: 'Sorry, there was an error uploading your PDF. Please try again.',
+        content: `Sorry, there was an error uploading your PDF: ${error.message}`,
         role: 'assistant',
         timestamp: new Date()
       }])
@@ -129,7 +134,7 @@ export default function Home() {
         custom_instructions: config.customInstructions
       }
 
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +143,8 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || 'Failed to get response')
       }
 
       const reader = response.body?.getReader()
@@ -168,11 +174,12 @@ export default function Home() {
         ))
       }
 
-    } catch (error) {
-      console.error('Error:', error)
+    } catch (err) {
+      console.error('Error:', err)
+      const error = err as Error
       setMessages((prev: Message[]) => [...prev, {
         id: Date.now().toString(),
-        content: 'Sorry, there was an error processing your request. Please check your API key and try again.',
+        content: `Sorry, there was an error: ${error.message}. Please check your API key and try again.`,
         role: 'assistant',
         timestamp: new Date()
       }])
