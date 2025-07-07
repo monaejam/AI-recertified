@@ -175,12 +175,24 @@ class handler(BaseHTTPRequestHandler):
                 message = request_data.get('message', '')
                 api_key = request_data.get('api_key', '')
                 
-                if not all([session_id, message, api_key]):
-                    self.wfile.write(b"Error: Missing required parameters")
+                # Debug logging
+                print(f"PDF Chat Debug - session_id: {session_id}, message: {message}, api_key: {api_key[:10]}...")
+                print(f"Available sessions: {list(pdf_sessions.keys())}")
+                
+                if not session_id:
+                    self.wfile.write(b"Error: session_id is required")
+                    return
+                
+                if not message:
+                    self.wfile.write(b"Error: message is required")
+                    return
+                
+                if not api_key:
+                    self.wfile.write(b"Error: api_key is required")
                     return
                 
                 if session_id not in pdf_sessions:
-                    self.wfile.write(b"Error: PDF session not found")
+                    self.wfile.write(f"Error: PDF session not found. Available sessions: {list(pdf_sessions.keys())}".encode())
                     return
                 
                 # Initialize OpenAI client
@@ -210,6 +222,7 @@ class handler(BaseHTTPRequestHandler):
                 
             except Exception as e:
                 error_message = f"Error: {str(e)}"
+                print(f"PDF Chat Error: {error_message}")
                 self.wfile.write(error_message.encode('utf-8'))
         
         else:

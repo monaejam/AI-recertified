@@ -162,6 +162,14 @@ export default function Home() {
         custom_instructions: config.customInstructions
       }
 
+      // Debug logging
+      console.log('Sending request:', {
+        endpoint,
+        isPdfMode,
+        pdfSessionId,
+        body: { ...body, api_key: body.api_key ? '***' : 'missing' }
+      })
+
       const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
