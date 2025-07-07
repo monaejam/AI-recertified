@@ -86,26 +86,35 @@ export default function Home() {
     if (!file || !apiKey || !apiBaseUrl) return
 
     setIsLoading(true)
-    const formData = new FormData()
-    formData.append('file', file)
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/upload-pdf?api_key=${apiKey}`, {
+      // For now, we'll simulate PDF upload since serverless functions can't easily handle file uploads
+      // In a real implementation, you'd need to use a service like Cloudinary or AWS S3
+      const response = await fetch(`${apiBaseUrl}/api/upload-pdf`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          api_key: apiKey,
+          filename: file.name,
+          file_size: file.size
+        })
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || 'Failed to upload PDF')
+        throw new Error(errorData.error || 'Failed to upload PDF')
       }
 
       const data = await response.json()
+      console.log('PDF upload response:', data)
+      
       setPdfSessionId(data.session_id)
       setIsPdfMode(true)
       setMessages([{
         id: Date.now().toString(),
-        content: `PDF uploaded successfully! You can now ask questions about the document.`,
+        content: `PDF "${file.name}" uploaded successfully! You can now ask questions about the document.`,
         role: 'assistant',
         timestamp: new Date()
       }])
@@ -169,6 +178,16 @@ export default function Home() {
         pdfSessionId,
         body: { ...body, api_key: body.api_key ? '***' : 'missing' }
       })
+
+      // Additional debugging for PDF mode
+      if (isPdfMode) {
+        console.log('PDF Mode Debug:', {
+          pdfSessionId,
+          sessionIdType: typeof pdfSessionId,
+          sessionIdLength: pdfSessionId ? pdfSessionId.length : 0,
+          bodyKeys: Object.keys(body)
+        })
+      }
 
       const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
