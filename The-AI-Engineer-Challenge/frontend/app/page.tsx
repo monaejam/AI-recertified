@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap, Upload, FileText } from 'lucide-react'
+import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap, Upload, FileText, Table } from 'lucide-react'
 
 interface Message {
   id: string
@@ -29,7 +29,10 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [pdfSessionId, setPdfSessionId] = useState<string | null>(null)
+  const [csvSessionId, setCsvSessionId] = useState<string | null>(null)
   const [isPdfMode, setIsPdfMode] = useState(false)
+  const [isCsvMode, setIsCsvMode] = useState(false)
+  const [fileType, setFileType] = useState<'pdf' | 'csv'>('pdf')
   const [apiBaseUrl, setApiBaseUrl] = useState('')
   const [config, setConfig] = useState<ChatConfig>({
     reasoningMode: 'none',
@@ -81,9 +84,33 @@ export default function Home() {
     scrollToBottom()
   }, [messages])
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !apiKey || !apiBaseUrl) return
+
+    // Validate file type
+    const isPdf = file.name.toLowerCase().endsWith('.pdf')
+    const isCsv = file.name.toLowerCase().endsWith('.csv')
+    
+    if (fileType === 'pdf' && !isPdf) {
+      setMessages([{
+        id: Date.now().toString(),
+        content: 'Please select a PDF file.',
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+      return
+    }
+    
+    if (fileType === 'csv' && !isCsv) {
+      setMessages([{
+        id: Date.now().toString(),
+        content: 'Please select a CSV file.',
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+      return
+    }
 
     setIsLoading(true)
 
@@ -97,7 +124,9 @@ export default function Home() {
           // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
           const base64Data = base64Content.split(',')[1]
           
-          const response = await fetch(`${apiBaseUrl}/api/upload-pdf`, {
+          const endpoint = fileType === 'pdf' ? '/api/upload-pdf' : '/api/upload-csv'
+          
+          const response = await fetch(`${apiBaseUrl}${endpoint}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -106,23 +135,31 @@ export default function Home() {
               api_key: apiKey,
               filename: file.name,
               file_size: file.size,
-              pdf_content: base64Data
+              file_content: base64Data
             })
           })
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.error || 'Failed to upload PDF')
+            throw new Error(errorData.error || `Failed to upload ${fileType.toUpperCase()}`)
           }
 
           const data = await response.json()
-          console.log('PDF upload response:', data)
+          console.log(`${fileType.toUpperCase()} upload response:`, data)
           
-          setPdfSessionId(data.session_id)
-          setIsPdfMode(true)
+          if (fileType === 'pdf') {
+            setPdfSessionId(data.session_id)
+            setIsPdfMode(true)
+            setIsCsvMode(false)
+          } else {
+            setCsvSessionId(data.session_id)
+            setIsCsvMode(true)
+            setIsPdfMode(false)
+          }
+          
           setMessages([{
             id: Date.now().toString(),
-            content: `PDF "${file.name}" uploaded successfully! You can now ask questions about the document.`,
+            content: `${fileType.toUpperCase()} "${file.name}" uploaded successfully! You can now ask questions about the ${fileType === 'pdf' ? 'document' : 'data'}.`,
             role: 'assistant',
             timestamp: new Date()
           }])
@@ -131,7 +168,7 @@ export default function Home() {
           const error = err as Error
           setMessages([{
             id: Date.now().toString(),
-            content: `Sorry, there was an error uploading your PDF: ${error.message}`,
+            content: `Sorry, there was an error uploading your ${fileType.toUpperCase()}: ${error.message}`,
             role: 'assistant',
             timestamp: new Date()
           }])
@@ -146,7 +183,7 @@ export default function Home() {
       reader.onerror = () => {
         setMessages([{
           id: Date.now().toString(),
-          content: 'Sorry, there was an error reading the PDF file.',
+          content: `Sorry, there was an error reading the ${fileType.toUpperCase()} file.`,
           role: 'assistant',
           timestamp: new Date()
         }])
@@ -164,7 +201,7 @@ export default function Home() {
       const error = err as Error
       setMessages([{
         id: Date.now().toString(),
-        content: `Sorry, there was an error uploading your PDF: ${error.message}`,
+        content: `Sorry, there was an error uploading your ${fileType.toUpperCase()}: ${error.message}`,
         role: 'assistant',
         timestamp: new Date()
       }])
@@ -191,10 +228,15 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      const endpoint = isPdfMode ? '/api/chat-pdf' : '/api/chat'
+      const endpoint = isPdfMode ? '/api/chat-pdf' : isCsvMode ? '/api/chat-csv' : '/api/chat'
       const body = isPdfMode ? {
         message: inputMessage,
         session_id: pdfSessionId,
+        api_key: apiKey,
+        model: 'gpt-4.1-mini'
+      } : isCsvMode ? {
+        message: inputMessage,
+        session_id: csvSessionId,
         api_key: apiKey,
         model: 'gpt-4.1-mini'
       } : {
@@ -215,16 +257,20 @@ export default function Home() {
       console.log('Sending request:', {
         endpoint,
         isPdfMode,
+        isCsvMode,
         pdfSessionId,
+        csvSessionId,
         body: { ...body, api_key: body.api_key ? '***' : 'missing' }
       })
 
-      // Additional debugging for PDF mode
-      if (isPdfMode) {
-        console.log('PDF Mode Debug:', {
+      // Additional debugging for file modes
+      if (isPdfMode || isCsvMode) {
+        const currentSessionId = isPdfMode ? pdfSessionId : csvSessionId
+        console.log('File Mode Debug:', {
           pdfSessionId,
-          sessionIdType: typeof pdfSessionId,
-          sessionIdLength: pdfSessionId ? pdfSessionId.length : 0,
+          csvSessionId,
+          sessionIdType: typeof currentSessionId,
+          sessionIdLength: currentSessionId ? currentSessionId.length : 0,
           bodyKeys: Object.keys(body)
         })
       }
@@ -286,7 +332,9 @@ export default function Home() {
   const clearChat = () => {
     setMessages([])
     setPdfSessionId(null)
+    setCsvSessionId(null)
     setIsPdfMode(false)
+    setIsCsvMode(false)
   }
 
   const getReasoningModeIcon = (mode: string) => {
@@ -362,17 +410,30 @@ export default function Home() {
                   />
                 </div>
 
-                {/* PDF Upload */}
+                {/* File Upload */}
                 <div>
                   <label className="block text-sm font-medium text-dark-700 mb-2">
-                    Upload PDF for Chat
+                    Upload File for Chat
                   </label>
+                  
+                  {/* File Type Dropdown */}
+                  <div className="mb-3">
+                    <select
+                      value={fileType}
+                      onChange={(e) => setFileType(e.target.value as 'pdf' | 'csv')}
+                      className="input-field w-full"
+                    >
+                      <option value="pdf">PDF Document</option>
+                      <option value="csv">CSV Data</option>
+                    </select>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <input
                       type="file"
                       ref={fileInputRef}
-                      onChange={handlePdfUpload}
-                      accept=".pdf"
+                      onChange={handleFileUpload}
+                      accept={fileType === 'pdf' ? '.pdf' : '.csv'}
                       className="hidden"
                     />
                     <button
@@ -380,13 +441,13 @@ export default function Home() {
                       className="btn-secondary flex items-center space-x-2"
                       disabled={!apiKey || isLoading}
                     >
-                      <Upload className="w-4 h-4" />
-                      <span>Upload PDF</span>
+                      {fileType === 'pdf' ? <FileText className="w-4 h-4" /> : <Table className="w-4 h-4" />}
+                      <span>Upload {fileType.toUpperCase()}</span>
                     </button>
-                    {pdfSessionId && (
+                    {(pdfSessionId || csvSessionId) && (
                       <div className="flex items-center text-sm text-green-600">
-                        <FileText className="w-4 h-4 mr-1" />
-                        <span>PDF loaded</span>
+                        {pdfSessionId ? <FileText className="w-4 h-4 mr-1" /> : <Table className="w-4 h-4 mr-1" />}
+                        <span>{pdfSessionId ? 'PDF' : 'CSV'} loaded</span>
                       </div>
                     )}
                   </div>
