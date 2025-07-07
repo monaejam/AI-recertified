@@ -8,14 +8,13 @@ from pydantic import BaseModel
 from openai import OpenAI
 import os
 import json
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from enum import Enum
 import tempfile
 from PyPDF2 import PdfReader
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
-from langchain.chains import ConversationalRetrievalChain
+import numpy as np
+import faiss
+import tiktoken
 import uuid
 import shutil
 
@@ -32,8 +31,9 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers in requests
 )
 
-# Global storage for vector stores
+# Global storage for vector stores and texts
 vector_stores = {}
+text_chunks = {}
 PERSIST_DIRECTORY = ".chroma"
 
 # Enums for better type safety
@@ -274,7 +274,37 @@ class PDFChatRequest(BaseModel):
     api_key: str
     model: Optional[str] = "gpt-4.1-mini"
 
-# PDF processing functions
+def get_encoding():
+    """Get tiktoken encoding for text tokenization."""
+    return tiktoken.get_encoding("cl100k_base")
+
+def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+    """Split text into overlapping chunks."""
+    encoding = get_encoding()
+    tokens = encoding.encode(text)
+    chunks = []
+    
+    for i in range(0, len(tokens), chunk_size - overlap):
+        chunk_tokens = tokens[i:i + chunk_size]
+        chunk_text = encoding.decode(chunk_tokens)
+        chunks.append(chunk_text)
+    
+    return chunks
+
+def get_embeddings(texts: List[str], api_key: str) -> np.ndarray:
+    """Get embeddings for texts using OpenAI API."""
+    client = OpenAI(api_key=api_key)
+    embeddings = []
+    
+    for text in texts:
+        response = client.embeddings.create(
+            model="text-embedding-ada-002",
+            input=text
+        )
+        embeddings.append(response.data[0].embedding)
+    
+    return np.array(embeddings, dtype=np.float32)
+
 def process_pdf_text(pdf_path: str) -> str:
     """Extract text from PDF."""
     reader = PdfReader(pdf_path)
@@ -282,6 +312,26 @@ def process_pdf_text(pdf_path: str) -> str:
     for page in reader.pages:
         text += page.extract_text() + "\n"
     return text
+
+def create_faiss_index(embeddings: np.ndarray) -> faiss.IndexFlatL2:
+    """Create FAISS index for vector similarity search."""
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(embeddings)
+    return index
+
+def get_relevant_chunks(query: str, index: faiss.IndexFlatL2, chunks: List[str], 
+                       query_embedding: np.ndarray, k: int = 3) -> List[str]:
+    """Get most relevant chunks for a query."""
+    # Reshape query embedding for FAISS
+    query_embedding = query_embedding.reshape(1, -1)
+    
+    # Search for similar vectors
+    distances, indices = index.search(query_embedding, k)
+    
+    # Get corresponding text chunks
+    relevant_chunks = [chunks[i] for i in indices[0]]
+    return relevant_chunks
 
 # New endpoints for PDF functionality
 @app.post("/api/upload-pdf")
@@ -298,33 +348,20 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = None):
             
             # Process the PDF
             raw_text = process_pdf_text(temp_file.name)
+            chunks = chunk_text(raw_text)
             
-            # Split text into chunks
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200,
-                length_function=len
-            )
-            texts = text_splitter.split_text(raw_text)
+            # Generate embeddings
+            embeddings = get_embeddings(chunks, api_key)
+            
+            # Create FAISS index
+            index = create_faiss_index(embeddings)
             
             # Generate session ID
             session_id = str(uuid.uuid4())
-            session_persist_dir = os.path.join(PERSIST_DIRECTORY, session_id)
             
-            # Initialize embedding model and vector store
-            embeddings = OpenAIEmbeddings(api_key=api_key)
-            vectorstore = Chroma.from_texts(
-                texts,
-                embeddings,
-                persist_directory=session_persist_dir
-            )
-            vectorstore.persist()
-            
-            # Store vector store reference
-            vector_stores[session_id] = {
-                "store": vectorstore,
-                "persist_dir": session_persist_dir
-            }
+            # Store index and chunks
+            vector_stores[session_id] = index
+            text_chunks[session_id] = chunks
             
             # Clean up temporary file
             os.unlink(temp_file.name)
@@ -332,7 +369,7 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = None):
             return JSONResponse({
                 "session_id": session_id,
                 "message": "PDF processed successfully",
-                "chunk_count": len(texts)
+                "chunk_count": len(chunks)
             })
             
     except Exception as e:
@@ -344,36 +381,56 @@ async def chat_pdf(request: PDFChatRequest):
         raise HTTPException(status_code=404, detail="Session not found. Please upload a PDF first.")
     
     try:
-        # Get the vector store for this session
-        vectorstore_data = vector_stores[request.session_id]
-        vectorstore = vectorstore_data["store"]
+        # Get the vector store and chunks for this session
+        index = vector_stores[request.session_id]
+        chunks = text_chunks[request.session_id]
         
-        # Initialize chat model
-        chat = ChatOpenAI(
-            api_key=request.api_key,
-            model=request.model,
-            streaming=True,
-            temperature=0.7
+        # Get query embedding
+        query_embedding = get_embeddings([request.message], request.api_key)[0]
+        
+        # Get relevant chunks
+        relevant_chunks = get_relevant_chunks(
+            request.message, 
+            index, 
+            chunks, 
+            query_embedding
         )
         
-        # Create retrieval chain
-        qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=chat,
-            retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),
-            return_source_documents=False
-        )
+        # Prepare context
+        context = "\n\n".join(relevant_chunks)
+        
+        # Initialize chat client
+        client = OpenAI(api_key=request.api_key)
+        
+        # Prepare messages
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a helpful AI assistant that answers questions about the provided document.
+Base your answers on the following context. If you cannot answer the question based on the context, say so.
+
+Context:
+{context}"""
+            },
+            {
+                "role": "user",
+                "content": request.message
+            }
+        ]
         
         async def generate():
             try:
-                result = await qa_chain.ainvoke({
-                    "question": request.message,
-                    "chat_history": []
-                })
+                stream = client.chat.completions.create(
+                    model=request.model,
+                    messages=messages,
+                    stream=True,
+                    temperature=0.7
+                )
                 
-                answer = result["answer"]
-                for char in answer:
-                    yield char
-                    
+                for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        yield chunk.choices[0].delta.content
+                        
             except Exception as e:
                 yield f"\n\n[Error: {str(e)}]"
         
@@ -384,7 +441,9 @@ async def chat_pdf(request: PDFChatRequest):
 
 @app.on_event("shutdown")
 async def cleanup():
-    """Clean up persisted vector stores on shutdown."""
+    """Clean up resources on shutdown."""
+    vector_stores.clear()
+    text_chunks.clear()
     if os.path.exists(PERSIST_DIRECTORY):
         shutil.rmtree(PERSIST_DIRECTORY)
 
