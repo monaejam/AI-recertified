@@ -35,6 +35,13 @@ class handler(BaseHTTPRequestHandler):
                 "status": "success",
                 "endpoint": "test"
             }
+        elif path == '/api/test-csv':
+            response = {
+                "message": "CSV endpoint is accessible!",
+                "status": "success",
+                "endpoint": "test-csv",
+                "available_endpoints": ["/api/test", "/api/config", "/api/chat", "/api/upload-pdf", "/api/upload-csv", "/api/chat-pdf", "/api/chat-csv"]
+            }
         elif path == '/api/config':
             # Get the base URL from environment or construct it
             vercel_url = os.environ.get('VERCEL_URL', 'localhost:3000')
@@ -221,6 +228,8 @@ class handler(BaseHTTPRequestHandler):
                 csv_base64 = request_data.get('file_content', '')
                 filename = request_data.get('filename', 'data.csv')
                 
+                print(f"CSV Upload Debug - filename: {filename}, api_key: {api_key[:10]}..., content_length: {len(csv_base64) if csv_base64 else 0}")
+                
                 if not api_key:
                     response = {
                         "error": "API key is required",
@@ -245,9 +254,13 @@ class handler(BaseHTTPRequestHandler):
                     csv_bytes = base64.b64decode(csv_base64)
                     csv_text = csv_bytes.decode('utf-8')
                     
+                    print(f"CSV Processing Debug - decoded length: {len(csv_text)}")
+                    
                     # Parse CSV content
                     csv_reader = csv.reader(io.StringIO(csv_text))
                     rows = list(csv_reader)
+                    
+                    print(f"CSV Processing Debug - rows parsed: {len(rows)}")
                     
                     if not rows:
                         raise Exception("CSV file is empty")
@@ -285,7 +298,10 @@ class handler(BaseHTTPRequestHandler):
                         }
                     }
                     
+                    print(f"CSV Upload Success - session_id: {session_id}")
+                    
                 except Exception as e:
+                    print(f"CSV Processing Error: {str(e)}")
                     # If CSV processing fails, create a mock session
                     csv_sessions[session_id] = {
                         "summary": {
@@ -304,7 +320,7 @@ class handler(BaseHTTPRequestHandler):
                         "session_id": session_id,
                         "rows_count": 0,
                         "columns_count": 0,
-                        "message": f"CSV '{filename}' uploaded (mock mode due to processing error)",
+                        "message": f"CSV '{filename}' uploaded (mock mode due to processing error: {str(e)})",
                         "status": "success",
                         "preview": {
                             "headers": [],
@@ -315,6 +331,7 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(response).encode())
                 
             except Exception as e:
+                print(f"CSV Upload Error: {str(e)}")
                 response = {
                     "error": f"Error uploading CSV: {str(e)}",
                     "status": "error"
