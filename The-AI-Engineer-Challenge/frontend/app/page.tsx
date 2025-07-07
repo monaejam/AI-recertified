@@ -76,6 +76,19 @@ export default function Home() {
     detectApiUrl()
   }, [])
 
+  // Debug useEffect to monitor session ID changes
+  useEffect(() => {
+    console.log('Session ID Debug - pdfSessionId changed:', pdfSessionId)
+  }, [pdfSessionId])
+
+  useEffect(() => {
+    console.log('Session ID Debug - csvSessionId changed:', csvSessionId)
+  }, [csvSessionId])
+
+  useEffect(() => {
+    console.log('Mode Debug - isPdfMode:', isPdfMode, 'isCsvMode:', isCsvMode)
+  }, [isPdfMode, isCsvMode])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -118,11 +131,16 @@ export default function Home() {
       // Read the file as base64
       const reader = new FileReader()
       
-      reader.onload = async (event) => {
+      reader.onload = async () => {
         try {
-          const base64Content = event.target?.result as string
+          const base64Content = reader.result as string
+          console.log(`${fileType.toUpperCase()} base64 content length:`, base64Content.length)
+          console.log(`${fileType.toUpperCase()} base64 content preview:`, base64Content.substring(0, 100))
+          
           // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
           const base64Data = base64Content.split(',')[1]
+          console.log(`${fileType.toUpperCase()} base64 data length:`, base64Data.length)
+          console.log(`${fileType.toUpperCase()} base64 data preview:`, base64Data.substring(0, 100))
           
           const endpoint = fileType === 'pdf' ? '/api/upload-pdf' : '/api/upload-csv'
           
@@ -135,7 +153,7 @@ export default function Home() {
               api_key: apiKey,
               filename: file.name,
               file_size: file.size,
-              file_content: base64Data
+              [fileType === 'pdf' ? 'pdf_content' : 'file_content']: base64Data
             })
           })
 
@@ -146,15 +164,22 @@ export default function Home() {
 
           const data = await response.json()
           console.log(`${fileType.toUpperCase()} upload response:`, data)
+          console.log(`${fileType.toUpperCase()} upload response type:`, typeof data)
+          console.log(`${fileType.toUpperCase()} upload response keys:`, Object.keys(data))
+          console.log(`${fileType.toUpperCase()} session_id from response:`, data.session_id)
           
           if (fileType === 'pdf') {
+            console.log('Setting PDF session ID:', data.session_id)
             setPdfSessionId(data.session_id)
             setIsPdfMode(true)
             setIsCsvMode(false)
+            console.log('PDF mode set to true, CSV mode set to false')
           } else {
+            console.log('Setting CSV session ID:', data.session_id)
             setCsvSessionId(data.session_id)
             setIsCsvMode(true)
             setIsPdfMode(false)
+            console.log('CSV mode set to true, PDF mode set to false')
           }
           
           setMessages([{
@@ -216,6 +241,27 @@ export default function Home() {
     e.preventDefault()
     if (!inputMessage.trim() || !apiKey.trim() || !apiBaseUrl) return
 
+    // Validate session ID for file modes
+    if (isPdfMode && !pdfSessionId) {
+      setMessages((prev: Message[]) => [...prev, {
+        id: Date.now().toString(),
+        content: 'Error: PDF session not found. Please upload a PDF file first.',
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+      return
+    }
+
+    if (isCsvMode && !csvSessionId) {
+      setMessages((prev: Message[]) => [...prev, {
+        id: Date.now().toString(),
+        content: 'Error: CSV session not found. Please upload a CSV file first.',
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+      return
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: inputMessage,
@@ -271,8 +317,21 @@ export default function Home() {
           csvSessionId,
           sessionIdType: typeof currentSessionId,
           sessionIdLength: currentSessionId ? currentSessionId.length : 0,
-          bodyKeys: Object.keys(body)
+          bodyKeys: Object.keys(body),
+          currentSessionId,
+          isPdfMode,
+          isCsvMode
         })
+        
+        // Check if session ID is missing
+        if (!currentSessionId) {
+          console.error('ERROR: Session ID is missing!', {
+            isPdfMode,
+            isCsvMode,
+            pdfSessionId,
+            csvSessionId
+          })
+        }
       }
 
       const response = await fetch(`${apiBaseUrl}${endpoint}`, {

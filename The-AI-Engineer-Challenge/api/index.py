@@ -141,6 +141,8 @@ class handler(BaseHTTPRequestHandler):
                 pdf_base64 = request_data.get('pdf_content', '')
                 filename = request_data.get('filename', 'document.pdf')
                 
+                print(f"PDF Upload Debug - filename: {filename}, api_key: {api_key[:10]}..., content_length: {len(pdf_base64) if pdf_base64 else 0}")
+                
                 if not api_key:
                     response = {
                         "error": "API key is required",
@@ -188,6 +190,8 @@ class handler(BaseHTTPRequestHandler):
                         "status": "success",
                         "text_preview": text_content[:500] + "..." if len(text_content) > 500 else text_content
                     }
+                    
+                    print(f"PDF Upload Success - session_id: {session_id}, chunks: {len(chunks)}")
                     
                 except Exception as e:
                     # If PDF processing fails, create a mock session
