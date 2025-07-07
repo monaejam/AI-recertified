@@ -3,9 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap, Upload, FileText } from 'lucide-react'
 
-// API base URL configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
-
 interface Message {
   id: string
   content: string
@@ -33,6 +30,7 @@ export default function Home() {
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [pdfSessionId, setPdfSessionId] = useState<string | null>(null)
   const [isPdfMode, setIsPdfMode] = useState(false)
+  const [apiBaseUrl, setApiBaseUrl] = useState('')
   const [config, setConfig] = useState<ChatConfig>({
     reasoningMode: 'none',
     styleTone: 'professional',
@@ -45,6 +43,36 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Auto-detect API URL
+  useEffect(() => {
+    const detectApiUrl = async () => {
+      try {
+        // Try production URL first
+        const vercelUrl = window.location.origin
+        const prodResponse = await fetch(`${vercelUrl}/api/config`)
+        if (prodResponse.ok) {
+          const config = await prodResponse.json()
+          setApiBaseUrl(config.api_url)
+          return
+        }
+
+        // Fallback to local development
+        const devResponse = await fetch('http://localhost:8000/api/config')
+        if (devResponse.ok) {
+          const config = await devResponse.json()
+          setApiBaseUrl(config.api_url)
+          return
+        }
+      } catch (err) {
+        console.error('Failed to detect API URL:', err)
+        // Default to same origin
+        setApiBaseUrl(window.location.origin)
+      }
+    }
+
+    detectApiUrl()
+  }, [])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -55,14 +83,14 @@ export default function Home() {
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !apiKey) return
+    if (!file || !apiKey || !apiBaseUrl) return
 
     setIsLoading(true)
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload-pdf?api_key=${apiKey}`, {
+      const response = await fetch(`${apiBaseUrl}/api/upload-pdf?api_key=${apiKey}`, {
         method: 'POST',
         body: formData,
       })
@@ -100,7 +128,7 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputMessage.trim() || !apiKey.trim()) return
+    if (!inputMessage.trim() || !apiKey.trim() || !apiBaseUrl) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -134,7 +162,7 @@ export default function Home() {
         custom_instructions: config.customInstructions
       }
 
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

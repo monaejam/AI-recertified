@@ -1,5 +1,5 @@
 # Import required FastAPI components for building the API
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Import Pydantic for data validation and settings management
@@ -21,14 +21,27 @@ import shutil
 # Initialize FastAPI application with a title
 app = FastAPI(title="Enhanced AI Chat API")
 
-# Configure CORS (Cross-Origin Resource Sharing) middleware
-# This allows the API to be accessed from different domains/origins
+def get_allowed_origins():
+    """Get allowed origins based on environment."""
+    # Vercel deployment URL pattern
+    vercel_url = os.environ.get('VERCEL_URL')
+    if vercel_url:
+        # Add both https and http variants of the Vercel URL
+        return [
+            f"https://{vercel_url}",
+            f"http://{vercel_url}",
+            "https://localhost:3000",
+            "http://localhost:3000"
+        ]
+    return ["http://localhost:3000"]  # Default for local development
+
+# Configure CORS middleware with dynamic origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows requests from any origin
-    allow_credentials=True,  # Allows cookies to be included in requests
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers in requests
+    allow_origins=get_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Global storage for vector stores and texts
@@ -246,20 +259,13 @@ Please provide:
 
 # Configuration endpoint
 @app.get("/api/config")
-async def get_config():
-    """Return available configuration options"""
+async def get_config(request: Request):
+    """Get server configuration including the base URL."""
+    base_url = str(request.base_url).rstrip('/')
     return {
-        "reasoning_modes": [mode.value for mode in ReasoningMode],
-        "style_tones": [tone.value for tone in StyleTone],
-        "accuracy_levels": [level.value for level in AccuracyLevel],
-        "models": ["gpt-4.1-mini", "gpt-4", "gpt-3.5-turbo"],
-        "default_settings": {
-            "temperature": 0.7,
-            "max_tokens": 2000,
-            "reasoning_mode": ReasoningMode.NONE.value,
-            "style_tone": StyleTone.PROFESSIONAL.value,
-            "accuracy_level": AccuracyLevel.STANDARD.value
-        }
+        "api_url": base_url,
+        "version": "1.0.0",
+        "features": ["pdf_chat", "streaming", "vector_search"]
     }
 
 # Health check endpoint
