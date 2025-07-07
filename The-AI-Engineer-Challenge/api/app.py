@@ -1,6 +1,6 @@
 # Import required FastAPI components for building the API
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Import Pydantic for data validation and settings management
 from pydantic import BaseModel
@@ -10,6 +10,14 @@ import os
 import json
 from typing import Optional, List, Dict, Any
 from enum import Enum
+import tempfile
+from PyPDF2 import PdfReader
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.chains import ConversationalRetrievalChain
+import uuid
+import shutil
 
 # Initialize FastAPI application with a title
 app = FastAPI(title="Enhanced AI Chat API")
@@ -23,6 +31,10 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers in requests
 )
+
+# Global storage for vector stores
+vector_stores = {}
+PERSIST_DIRECTORY = ".chroma"
 
 # Enums for better type safety
 class ReasoningMode(str, Enum):
@@ -254,6 +266,127 @@ async def get_config():
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "features": ["enhanced_prompts", "chain_of_thought", "style_guidance", "accuracy_control"]}
+
+# New models for PDF chat
+class PDFChatRequest(BaseModel):
+    message: str
+    session_id: str
+    api_key: str
+    model: Optional[str] = "gpt-4.1-mini"
+
+# PDF processing functions
+def process_pdf_text(pdf_path: str) -> str:
+    """Extract text from PDF."""
+    reader = PdfReader(pdf_path)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() + "\n"
+    return text
+
+# New endpoints for PDF functionality
+@app.post("/api/upload-pdf")
+async def upload_pdf(file: UploadFile = File(...), api_key: str = None):
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
+    
+    try:
+        # Create a temporary file to store the PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            content = await file.read()
+            temp_file.write(content)
+            temp_file.flush()
+            
+            # Process the PDF
+            raw_text = process_pdf_text(temp_file.name)
+            
+            # Split text into chunks
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=len
+            )
+            texts = text_splitter.split_text(raw_text)
+            
+            # Generate session ID
+            session_id = str(uuid.uuid4())
+            session_persist_dir = os.path.join(PERSIST_DIRECTORY, session_id)
+            
+            # Initialize embedding model and vector store
+            embeddings = OpenAIEmbeddings(api_key=api_key)
+            vectorstore = Chroma.from_texts(
+                texts,
+                embeddings,
+                persist_directory=session_persist_dir
+            )
+            vectorstore.persist()
+            
+            # Store vector store reference
+            vector_stores[session_id] = {
+                "store": vectorstore,
+                "persist_dir": session_persist_dir
+            }
+            
+            # Clean up temporary file
+            os.unlink(temp_file.name)
+            
+            return JSONResponse({
+                "session_id": session_id,
+                "message": "PDF processed successfully",
+                "chunk_count": len(texts)
+            })
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat-pdf")
+async def chat_pdf(request: PDFChatRequest):
+    if request.session_id not in vector_stores:
+        raise HTTPException(status_code=404, detail="Session not found. Please upload a PDF first.")
+    
+    try:
+        # Get the vector store for this session
+        vectorstore_data = vector_stores[request.session_id]
+        vectorstore = vectorstore_data["store"]
+        
+        # Initialize chat model
+        chat = ChatOpenAI(
+            api_key=request.api_key,
+            model=request.model,
+            streaming=True,
+            temperature=0.7
+        )
+        
+        # Create retrieval chain
+        qa_chain = ConversationalRetrievalChain.from_llm(
+            llm=chat,
+            retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),
+            return_source_documents=False
+        )
+        
+        async def generate():
+            try:
+                result = await qa_chain.ainvoke({
+                    "question": request.message,
+                    "chat_history": []
+                })
+                
+                answer = result["answer"]
+                for char in answer:
+                    yield char
+                    
+            except Exception as e:
+                yield f"\n\n[Error: {str(e)}]"
+        
+        return StreamingResponse(generate(), media_type="text/plain")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.on_event("shutdown")
+async def cleanup():
+    """Clean up persisted vector stores on shutdown."""
+    if os.path.exists(PERSIST_DIRECTORY):
+        shutil.rmtree(PERSIST_DIRECTORY)
 
 # Entry point for running the application directly
 if __name__ == "__main__":

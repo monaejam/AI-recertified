@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap } from 'lucide-react'
+import { Send, Bot, User, Settings, Sparkles, Brain, Target, Palette, Zap, Upload, FileText } from 'lucide-react'
 
 interface Message {
   id: string
@@ -28,6 +28,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [pdfSessionId, setPdfSessionId] = useState<string | null>(null)
+  const [isPdfMode, setIsPdfMode] = useState(false)
   const [config, setConfig] = useState<ChatConfig>({
     reasoningMode: 'none',
     styleTone: 'professional',
@@ -38,6 +40,7 @@ export default function Home() {
     customInstructions: ''
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -46,6 +49,49 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !apiKey) return
+
+    setIsLoading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch(`/api/upload-pdf?api_key=${apiKey}`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload PDF')
+      }
+
+      const data = await response.json()
+      setPdfSessionId(data.session_id)
+      setIsPdfMode(true)
+      setMessages([{
+        id: Date.now().toString(),
+        content: `PDF uploaded successfully! You can now ask questions about the document.`,
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+    } catch (error) {
+      console.error('Error:', error)
+      setMessages([{
+        id: Date.now().toString(),
+        content: 'Sorry, there was an error uploading your PDF. Please try again.',
+        role: 'assistant',
+        timestamp: new Date()
+      }])
+    } finally {
+      setIsLoading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,29 +104,37 @@ export default function Home() {
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev: Message[]) => [...prev, userMessage])
     setInputMessage('')
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const endpoint = isPdfMode ? '/api/chat-pdf' : '/api/chat'
+      const body = isPdfMode ? {
+        message: inputMessage,
+        session_id: pdfSessionId,
+        api_key: apiKey,
+        model: 'gpt-4.1-mini'
+      } : {
+        developer_message: developerMessage,
+        user_message: inputMessage,
+        model: 'gpt-4.1-mini',
+        api_key: apiKey,
+        reasoning_mode: config.reasoningMode,
+        style_tone: config.styleTone,
+        accuracy_level: config.accuracyLevel,
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
+        include_citations: config.includeCitations,
+        custom_instructions: config.customInstructions
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          developer_message: developerMessage,
-          user_message: inputMessage,
-          model: 'gpt-4.1-mini',
-          api_key: apiKey,
-          reasoning_mode: config.reasoningMode,
-          style_tone: config.styleTone,
-          accuracy_level: config.accuracyLevel,
-          temperature: config.temperature,
-          max_tokens: config.maxTokens,
-          include_citations: config.includeCitations,
-          custom_instructions: config.customInstructions
-        })
+        body: JSON.stringify(body)
       })
 
       if (!response.ok) {
@@ -93,7 +147,7 @@ export default function Home() {
       let assistantMessage = ''
       const assistantMessageId = (Date.now() + 1).toString()
 
-      setMessages(prev => [...prev, {
+      setMessages((prev: Message[]) => [...prev, {
         id: assistantMessageId,
         content: '',
         role: 'assistant',
@@ -107,7 +161,7 @@ export default function Home() {
         const chunk = new TextDecoder().decode(value)
         assistantMessage += chunk
 
-        setMessages(prev => prev.map(msg => 
+        setMessages((prev: Message[]) => prev.map((msg: Message) => 
           msg.id === assistantMessageId 
             ? { ...msg, content: assistantMessage }
             : msg
@@ -116,7 +170,7 @@ export default function Home() {
 
     } catch (error) {
       console.error('Error:', error)
-      setMessages(prev => [...prev, {
+      setMessages((prev: Message[]) => [...prev, {
         id: Date.now().toString(),
         content: 'Sorry, there was an error processing your request. Please check your API key and try again.',
         role: 'assistant',
@@ -129,6 +183,8 @@ export default function Home() {
 
   const clearChat = () => {
     setMessages([])
+    setPdfSessionId(null)
+    setIsPdfMode(false)
   }
 
   const getReasoningModeIcon = (mode: string) => {
@@ -199,9 +255,39 @@ export default function Home() {
                     type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="input-field"
+                    className="input-field w-full"
+                    placeholder="Enter your OpenAI API key"
                   />
+                </div>
+
+                {/* PDF Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-2">
+                    Upload PDF for Chat
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handlePdfUpload}
+                      accept=".pdf"
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn-secondary flex items-center space-x-2"
+                      disabled={!apiKey || isLoading}
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>Upload PDF</span>
+                    </button>
+                    {pdfSessionId && (
+                      <div className="flex items-center text-sm text-green-600">
+                        <FileText className="w-4 h-4 mr-1" />
+                        <span>PDF loaded</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
