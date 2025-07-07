@@ -150,7 +150,7 @@ vercel deploy
 ```bash
 # Create and merge PR
 gh pr create --title "Fix 404 errors with Vercel serverless functions" --body "Restructures API into individual serverless functions for proper Vercel deployment"
-gh pr merge --squash
+gh pr merge --merge --delete-branch
 ```
 
 ### Option 3: Direct Merge (if working locally)
@@ -188,4 +188,70 @@ After successful deployment:
 2. Test the chat functionality
 3. Add more endpoints as needed (PDF upload, etc.)
 4. Consider adding proper error logging
-5. Add rate limiting if needed 
+5. Add rate limiting if needed
+
+# Merge Instructions for fix-pdf-session-id Branch
+
+## Summary
+This branch fixes the PDF session ID issue where PDF uploads were failing because the frontend was sending `file_content` instead of `pdf_content` to the backend.
+
+## Changes Made
+1. **Frontend (page.tsx)**: 
+   - Fixed the request body to send `pdf_content` for PDF files and `file_content` for CSV files
+   - Added comprehensive debugging to track session ID changes
+   - Added validation to ensure session IDs exist before sending chat requests
+   - Added detailed logging for upload responses and base64 processing
+
+2. **Backend (index.py)**:
+   - Added debugging to PDF upload endpoint to track content reception
+   - Added success logging when PDF sessions are created
+
+## How to Merge
+
+### Option 1: GitHub Pull Request (Recommended)
+1. Push the branch to GitHub:
+   ```bash
+   git push origin fix-pdf-session-id
+   ```
+
+2. Go to the GitHub repository and create a new Pull Request:
+   - Base branch: `main`
+   - Compare branch: `fix-pdf-session-id`
+   - Title: "Fix PDF session ID issue"
+   - Description: "Fixes PDF upload functionality by correcting field name mismatch between frontend and backend"
+
+3. Review the changes and merge the PR
+
+### Option 2: GitHub CLI
+```bash
+# Create and merge the PR using GitHub CLI
+gh pr create --title "Fix PDF session ID issue" --body "Fixes PDF upload functionality by correcting field name mismatch between frontend and backend"
+gh pr merge --merge
+```
+
+### Option 3: Local Merge
+```bash
+# Switch to main branch
+git checkout main
+
+# Merge the feature branch
+git merge fix-pdf-session-id
+
+# Push to remote
+git push origin main
+
+# Delete the feature branch (optional)
+git branch -d fix-pdf-session-id
+git push origin --delete fix-pdf-session-id
+```
+
+## Testing
+After merging, test the following:
+1. Upload a PDF file
+2. Verify the session ID is properly set
+3. Send a chat message about the PDF
+4. Verify the response is generated correctly
+
+## Files Changed
+- `frontend/app/page.tsx`
+- `api/index.py` 
