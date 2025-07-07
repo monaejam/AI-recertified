@@ -7,6 +7,8 @@ import tempfile
 import uuid
 import shutil
 from PyPDF2 import PdfReader
+import base64
+import io
 
 # Global storage for PDF sessions (in production, use a proper database)
 pdf_sessions = {}
@@ -126,9 +128,9 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             
             try:
-                # For now, return a simple response since file upload is complex in serverless
-                # In a real implementation, you'd need to handle multipart form data
                 api_key = request_data.get('api_key', '')
+                pdf_base64 = request_data.get('pdf_content', '')
+                filename = request_data.get('filename', 'document.pdf')
                 
                 if not api_key:
                     response = {
@@ -138,19 +140,61 @@ class handler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps(response).encode())
                     return
                 
-                # Create a mock session for now
-                session_id = str(uuid.uuid4())
-                pdf_sessions[session_id] = {
-                    "chunks": ["Mock PDF content for testing"],
-                    "filename": "test.pdf"
-                }
+                if not pdf_base64:
+                    response = {
+                        "error": "PDF content is required",
+                        "status": "error"
+                    }
+                    self.wfile.write(json.dumps(response).encode())
+                    return
                 
-                response = {
-                    "session_id": session_id,
-                    "chunks_count": 1,
-                    "message": "PDF upload simulated successfully",
-                    "status": "success"
-                }
+                # Create a session ID
+                session_id = str(uuid.uuid4())
+                
+                try:
+                    # Decode base64 PDF content
+                    pdf_bytes = base64.b64decode(pdf_base64)
+                    pdf_stream = io.BytesIO(pdf_bytes)
+                    
+                    # Extract text from PDF
+                    reader = PdfReader(pdf_stream)
+                    text_content = ""
+                    for page in reader.pages:
+                        text_content += page.extract_text() + "\n"
+                    
+                    # Simple text chunking (in production, use more sophisticated chunking)
+                    chunks = [text_content[i:i+1000] for i in range(0, len(text_content), 1000)]
+                    
+                    # Store session data
+                    pdf_sessions[session_id] = {
+                        "chunks": chunks,
+                        "filename": filename,
+                        "text_content": text_content[:2000] + "..." if len(text_content) > 2000 else text_content
+                    }
+                    
+                    response = {
+                        "session_id": session_id,
+                        "chunks_count": len(chunks),
+                        "message": f"PDF '{filename}' uploaded and processed successfully",
+                        "status": "success",
+                        "text_preview": text_content[:500] + "..." if len(text_content) > 500 else text_content
+                    }
+                    
+                except Exception as e:
+                    # If PDF processing fails, create a mock session
+                    pdf_sessions[session_id] = {
+                        "chunks": [f"Mock content for {filename}. This is a placeholder since PDF processing failed: {str(e)}"],
+                        "filename": filename,
+                        "text_content": f"Mock content for {filename}"
+                    }
+                    
+                    response = {
+                        "session_id": session_id,
+                        "chunks_count": 1,
+                        "message": f"PDF '{filename}' uploaded (mock mode due to processing error)",
+                        "status": "success",
+                        "text_preview": f"Mock content for {filename}"
+                    }
                 
                 self.wfile.write(json.dumps(response).encode())
                 

@@ -88,36 +88,77 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      // For now, we'll simulate PDF upload since serverless functions can't easily handle file uploads
-      // In a real implementation, you'd need to use a service like Cloudinary or AWS S3
-      const response = await fetch(`${apiBaseUrl}/api/upload-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          api_key: apiKey,
-          filename: file.name,
-          file_size: file.size
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to upload PDF')
-      }
-
-      const data = await response.json()
-      console.log('PDF upload response:', data)
+      // Read the file as base64
+      const reader = new FileReader()
       
-      setPdfSessionId(data.session_id)
-      setIsPdfMode(true)
-      setMessages([{
-        id: Date.now().toString(),
-        content: `PDF "${file.name}" uploaded successfully! You can now ask questions about the document.`,
-        role: 'assistant',
-        timestamp: new Date()
-      }])
+      reader.onload = async (event) => {
+        try {
+          const base64Content = event.target?.result as string
+          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+          const base64Data = base64Content.split(',')[1]
+          
+          const response = await fetch(`${apiBaseUrl}/api/upload-pdf`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              api_key: apiKey,
+              filename: file.name,
+              file_size: file.size,
+              pdf_content: base64Data
+            })
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.error || 'Failed to upload PDF')
+          }
+
+          const data = await response.json()
+          console.log('PDF upload response:', data)
+          
+          setPdfSessionId(data.session_id)
+          setIsPdfMode(true)
+          setMessages([{
+            id: Date.now().toString(),
+            content: `PDF "${file.name}" uploaded successfully! You can now ask questions about the document.`,
+            role: 'assistant',
+            timestamp: new Date()
+          }])
+        } catch (err) {
+          console.error('Error:', err)
+          const error = err as Error
+          setMessages([{
+            id: Date.now().toString(),
+            content: `Sorry, there was an error uploading your PDF: ${error.message}`,
+            role: 'assistant',
+            timestamp: new Date()
+          }])
+        } finally {
+          setIsLoading(false)
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+        }
+      }
+      
+      reader.onerror = () => {
+        setMessages([{
+          id: Date.now().toString(),
+          content: 'Sorry, there was an error reading the PDF file.',
+          role: 'assistant',
+          timestamp: new Date()
+        }])
+        setIsLoading(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+      
+      // Read the file as base64
+      reader.readAsDataURL(file)
+      
     } catch (err) {
       console.error('Error:', err)
       const error = err as Error
@@ -127,7 +168,6 @@ export default function Home() {
         role: 'assistant',
         timestamp: new Date()
       }])
-    } finally {
       setIsLoading(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
