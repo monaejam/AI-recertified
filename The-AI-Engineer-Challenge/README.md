@@ -406,3 +406,113 @@ This project is part of the AI Engineer Challenge by AI Makerspace.
 ---
 
 **Built with ❤️ using FastAPI, Next.js, and OpenAI GPT-4.1-mini**
+
+# 🚀 PDF Chat - Your Documents, But Make It Chatty!
+
+Ever wished your PDFs could talk back? Well, now they can! This super-cool app lets you upload PDFs and chat with them like they're your smartest friend. 
+
+## ✨ Features That'll Blow Your Mind
+
+- 📤 **Easy-Peasy Upload**: Drop your PDF like it's hot!
+- 🧠 **Smart Processing**: We use LangChain's magic to make your PDFs searchable
+- 💬 **Chat Away**: Ask questions, get answers - it's like texting your document
+- 🎯 **Precise Answers**: Our RAG system finds exactly what you need
+- 🌊 **Smooth Streaming**: Responses flow in real-time, no awkward waiting
+
+## 🛠️ Tech Stack of Awesomeness
+
+- **Frontend**: Next.js + Tailwind CSS = Beautiful UI that just works
+- **Backend**: FastAPI - Because speed is life! 🏃‍♂️
+- **RAG Engine**: LangChain + OpenAI = AI goodness
+- **Vector Store**: Chroma - Making your documents searchable at light speed
+- **Deployment**: Vercel - Deploy like a boss! 
+
+## 🚦 Getting Started
+
+1. Clone this bad boy:
+   ```bash
+   git clone <your-repo-url>
+   ```
+
+2. Install the goodies:
+   ```bash
+   # Backend
+   cd api
+   pip install -r requirements.txt
+
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
+
+3. Set up your secret sauce:
+   ```bash
+   # Create a .env file in the api directory
+   echo "OPENAI_API_KEY=your-key-here" > api/.env
+   ```
+
+4. Light it up:
+   ```bash
+   # Backend (in api directory)
+   uvicorn app:app --reload
+
+   # Frontend (in frontend directory)
+   npm run dev
+   ```
+
+5. 🎉 Visit `http://localhost:3000` and start chatting!
+
+## 🌟 How It Works
+
+1. **Upload**: Your PDF gets split into bite-sized chunks
+2. **Process**: Each chunk gets turned into a vector (fancy math stuff!)
+3. **Store**: Chroma keeps track of everything
+4. **Chat**: Ask a question, and our RAG system:
+   - Finds the most relevant chunks
+   - Feeds them to the AI
+   - Returns a smart answer
+
+## 🎯 Usage Tips
+
+- **Better Questions = Better Answers**: Be specific in what you ask
+- **Context is King**: The AI uses nearby text for better understanding
+- **Multiple PDFs**: Upload as many as you want, each gets its own chat session
+
+## 🔐 Security First!
+
+- Your OpenAI API key is treated like gold - never stored, always encrypted in transit
+- PDFs are processed securely and cleaned up after use
+- Vector stores are isolated per session
+
+## 🚀 Deployment
+
+We're rocking Vercel for both frontend and backend:
+
+1. Push to GitHub
+2. Connect to Vercel
+3. Set your `OPENAI_API_KEY`
+4. Watch the magic happen!
+
+## 🤝 Contributing
+
+Got ideas? We love ideas! Here's how to contribute:
+
+1. Fork it
+2. Create your feature branch
+3. Make it awesome
+4. Create a PR
+5. Get famous! 🌟
+
+## 📝 License
+
+MIT - Because sharing is caring! 
+
+## 🙋‍♂️ Need Help?
+
+- 🐛 Found a bug? Open an issue!
+- 💡 Got a feature idea? We're all ears!
+- 🤔 Questions? Ask away!
+
+---
+
+Made with ❤️ and a lot of ☕️ by your friendly neighborhood developers
