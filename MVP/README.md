@@ -67,7 +67,7 @@ Additional data needs:
 •	Competitor feature comparisons for competitive intelligence responses
 •	Product roadmap data to address feature requests
 
-📝 Task 4: The app
+📝 ** Task 4: The app **
 
 ✅main.py - The Central API Server
 This is the FastAPI application that serves as the main entry point. It orchestrates all the components and provides REST endpoints for:
@@ -141,7 +141,7 @@ Flag - Stores flagging decisions and reasons
 Provides database initialization functions
 
 
-📝 Task 5: SDG 
+📝 **Task 5: SDG **
 =====================================================================
 📊 SURVEY SENTINEL - RAGAS EVALUATION RESULTS
 ======================================================================
