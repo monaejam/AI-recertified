@@ -143,7 +143,6 @@ Provides database initialization functions
 📝 **Task 5 SDG:**
 
 
-
 =====================================================================
 📊 SURVEY SENTINEL - RAGAS EVALUATION RESULTS
 ======================================================================
