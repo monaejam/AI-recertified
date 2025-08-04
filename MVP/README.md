@@ -1,4 +1,4 @@
-📝 Task 1:
+📝 **Task 1:**
 ✅ Defining your Problem and Audience
 
 Customer Success teams struggle to efficiently identify and prioritize critical customer feedback from thousands of survey responses, risking missed revenue-impacting issues and customer churn.
@@ -6,7 +6,7 @@ Customer Success teams struggle to efficiently identify and prioritize critical 
 ✅ Why This Is a Problem
 Customer Success teams at B2B SaaS companies already use Qualtrics or similar platforms to collect and tally NPS and satisfaction scores, but those tools stop at basic dashboards and keyword tags. They don’t automatically triage free-text feedback based on customer tier, MRR, or historical health, nor do they draw cross-customer pattern insights in real time. As a result, even though CSMs aren’t reading every comment manually, they still miss emerging “whispers” of churn risk buried in thousands of open-ended responses—and urgent issues from high-value accounts can slip through until it’s too late.
 
-📝 Task 2:
+📝 **Task 2:**
 ✅ Articulate your proposed solution
 Survey Sentinel transforms the CSM workflow by providing an AI-powered intelligent triage system that automatically analyzes every survey response in real-time. When survey data is uploaded, AI agents immediately process each response, extracting sentiment, identifying mentioned features, detecting business impact indicators, and cross-referencing against customer history and business value. The system then intelligently flags responses that need attention, providing priority levels
 The system feels like having a team of analysts working 24/7, surfacing critical issues before they escalate and providing CSMs with exactly what they need to know, when they need to know it.
@@ -40,7 +40,7 @@ The system uses LangGraph agents in the flagging_agent.py for intelligent survey
 5.	Makes final flagging decision with confidence scores
 This agentic reasoning ensures that flagging decisions consider full business context, not just sentiment analysis.
 
-📝Task 3: Dealing with the Data(Faker library)
+📝 **Task 3: Dealing with the Data(Faker library)**
 
 ✅Deliverables
 1.	Survey Responses CSV (survey_responses.csv) - Primary data containing customer feedback with scores and text responses, used for sentiment analysis and issue identification.
@@ -67,7 +67,7 @@ Additional data needs:
 •	Competitor feature comparisons for competitive intelligence responses
 •	Product roadmap data to address feature requests
 
-📝Task 4: The app
+📝 **Task 4: The app**
 
 ✅main.py - The Central API Server
 This is the FastAPI application that serves as the main entry point. It orchestrates all the components and provides REST endpoints for:
@@ -140,9 +140,9 @@ SurveyResponse - Stores survey data with all extracted metadata
 Flag - Stores flagging decisions and reasons
 Provides database initialization functions
 
+📝 **Task 5 SDG:**
 
-📝 Task 5: SDG 
-=====================================================================
+
 📊 SURVEY SENTINEL - RAGAS EVALUATION RESULTS
 ======================================================================
 
@@ -190,7 +190,7 @@ Advanced Retrieval - Successful: 4
 
 ======================================================================
 
-📝 Task 6:  The Benefits of Advanced Retrieval
+📝 **Task 6:  The Benefits of Advanced Retrieval**
 
 ✅
 1.	Hybrid Search (Keyword + Semantic) - Already implemented! Combines embedding similarity with keyword matching for robust retrieval.
@@ -200,7 +200,7 @@ Advanced Retrieval - Successful: 4
 5.	Contextual Compression - Reduce retrieved chunks to only relevant portions for more focused context.
 
 
-📝 Task 7: Assessing Performance
+📝 **Task 7: Assessing Performance**
 
 Planned improvements for second half:
 1.	Fine-tuned Embeddings - Train on  survey-specific vocabulary for better semantic matching
