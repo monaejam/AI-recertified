@@ -1,0 +1,101 @@
+{
+  "alert_rules": [
+      {
+          "rule_id": "R001",
+          "name": "High-Value Customer Critical Issue",
+          "conditions": {
+              "customer_tier": ["Enterprise"],
+              "mrr_threshold": 50000,
+              "score_threshold": 4,
+              "sentiment": ["negative"]
+          },
+          "actions": [
+              "immediate_executive_notification",
+              "customer_success_escalation",
+              "technical_team_alert"
+          ],
+          "priority": "P0",
+          "timeline": "immediate"
+      },
+      {
+          "rule_id": "R002", 
+          "name": "Revenue Impact Mentioned",
+          "conditions": {
+              "revenue_impact": true,
+              "customer_tier": ["Enterprise", "Mid-Market"]
+          },
+          "actions": [
+              "account_manager_notification",
+              "revenue_team_alert",
+              "executive_summary"
+          ],
+          "priority": "P0",
+          "timeline": "immediate"
+      },
+      {
+          "rule_id": "R003",
+          "name": "Competitor Comparison Risk",
+          "conditions": {
+              "competitors_mentioned": true,
+              "customer_tier": ["Enterprise", "Mid-Market"],
+              "tenure_months": {"<": 24}
+          },
+          "actions": [
+              "competitive_intelligence_alert",
+              "customer_success_outreach",
+              "retention_team_notification"
+          ],
+          "priority": "P1",
+          "timeline": "24h"
+      },
+      {
+          "rule_id": "R004",
+          "name": "Systemic Issue Pattern",
+          "conditions": {
+              "similar_issues_count": {">=": 3},
+              "time_window": "7d",
+              "customer_tier": ["Enterprise"]
+          },
+          "actions": [
+              "product_team_escalation",
+              "engineering_alert",
+              "customer_communication_plan"
+          ],
+          "priority": "P1", 
+          "timeline": "24h"
+      },
+      {
+          "rule_id": "R005",
+          "name": "New Customer Onboarding Issue",
+          "conditions": {
+              "tenure_months": {"<": 6},
+              "score_threshold": 5,
+              "question_code": ["Portal_Experience", "General_Experience"]
+          },
+          "actions": [
+              "onboarding_team_alert",
+              "customer_success_check_in",
+              "training_recommendation"
+          ],
+          "priority": "P2",
+          "timeline": "48h"
+      }
+  ],
+  "escalation_matrix": {
+      "P0": {
+          "timeline": "immediate",
+          "notify": ["executive", "customer_success", "account_manager"],
+          "channels": ["slack_urgent", "email", "sms"]
+      },
+      "P1": {
+          "timeline": "24h",
+          "notify": ["customer_success", "account_manager", "support_manager"],
+          "channels": ["slack", "email"]
+      },
+      "P2": {
+          "timeline": "48h", 
+          "notify": ["customer_success", "support_team"],
+          "channels": ["email", "ticket"]
+      }
+  }
+}
