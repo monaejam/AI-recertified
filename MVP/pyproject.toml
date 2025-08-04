@@ -1,0 +1,304 @@
+[project]
+name = "survey-sentinel-lite"
+version = "0.5.0"
+description = "AI-Enhanced Survey Sentinel with LangGraph Agent-Based Flagging and RAGAS Evaluation"
+authors = [{ name = "MJ" }]
+requires-python = ">=3.9,<3.12"  # Updated to exclude Python 3.12+ for better compatibility
+license = { text = "MIT" }
+readme = "README.md"
+keywords = ["survey", "ai", "agents", "customer-success", "flagging", "ragas", "evaluation", "langgraph"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    # Core Data Science & Analytics
+    "pandas>=2.1.4",
+    "numpy>=1.26.3",
+    "scikit-learn>=1.4.0",
+    "plotly>=5.17.0",
+    "matplotlib>=3.8.2",
+    "torch>=2.0.0",  
+    "transformers>=4.30.0",  
+    "sentence-transformers>=2.2.0",
+
+    # Web Framework & API
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
+    "python-multipart>=0.0.6",
+
+    # Database & Storage
+    "sqlalchemy>=2.0.25",
+    "alembic>=1.13.0",
+
+    # LLM & AI Agents (FIXED VERSIONS for compatibility)
+    "openai>=1.10.0,<2.0.0",
+    "langchain>=0.2.0,<0.3.0",  # Fixed to v0.2.x for compatibility
+    "langchain-core>=0.2.0,<0.3.0",  # Fixed to v0.2.x for compatibility
+    "langchain-openai>=0.1.0,<0.2.0",  # Compatible with langchain 0.2.x
+    "langchain-community>=0.2.0,<0.3.0",  # Fixed to v0.2.x for compatibility
+    "langgraph>=0.2.20,<0.3.0",  # FIXED: Compatible version that avoids MRO issues
+    "langsmith>=0.1.0,<0.2.0",  # Compatible with langchain 0.2.x
+
+    # Vector Stores & Embeddings
+    "qdrant-client>=1.7.0",
+    "langchain-qdrant>=0.1.0,<0.2.0",  # Compatible with langchain 0.2.x
+    "chromadb>=0.4.22",
+    "tiktoken>=0.5.2",
+
+    # RAGAS Evaluation & Testing (Updated for compatibility)
+    "ragas>=0.1.0,<0.2.0",  # Fixed version to avoid conflicts
+    "datasets>=2.14.0",
+    "evaluate>=0.4.1",
+
+    # Agent Tools & Utilities
+    "python-docx>=1.1.0",
+    "pypdf>=3.17.0",
+    "beautifulsoup4>=4.12.2",
+
+    # Scheduling & Orchestration
+    "schedule>=1.2.0",
+    "celery>=5.3.0",
+    "redis>=5.0.0",
+
+    # Monitoring & Observability
+    "prometheus-client>=0.19.0",
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-instrumentation-fastapi>=0.43b0",
+    "structlog>=23.2.0",
+
+    # External APIs & HTTP
+    "requests>=2.31.0",
+    "httpx>=0.26.0",
+    "aiohttp>=3.9.0",
+    "serpapi>=0.1.5",
+
+    # Enhanced UI & Visualization
+    "streamlit>=1.30.0",
+    "streamlit-aggrid>=0.3.4",
+
+    # Configuration & Environment
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.1",
+    "toml>=0.10.2",
+
+    # CLI & Developer Experience
+    "rich>=13.7.0",
+    "typer>=0.9.0",
+    "click>=8.1.0",
+
+    # Data Generation & Mocking
+    "faker>=22.2.0",
+    "factory-boy>=3.3.0",
+
+    # Testing Framework
+    "pytest>=7.4.4",
+    "pytest-asyncio>=0.23.3",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+
+    # Performance & Optimization
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.0",
+
+    # Security
+    "cryptography>=41.0.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+]
+
+[tool.poetry.group.dev.dependencies]
+# Development & Research
+jupyter = "^1.0.0"
+ipython = "^8.20.0"
+notebook = "^7.0.0"
+
+# Data Analysis & Visualization
+seaborn = "^0.12.0"
+plotly = "^5.17.0"
+matplotlib = "^3.8.0"
+
+# Code Quality & Formatting
+black = "^23.12.0"
+isort = "^5.13.0"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+pylint = "^3.0.0"
+
+# Documentation
+mkdocs = "^1.5.0"
+mkdocs-material = "^9.5.0"
+mkdocstrings = "^0.24.0"
+
+# Pre-commit hooks
+pre-commit = "^3.6.0"
+
+# Performance Profiling
+py-spy = "^0.3.14"
+memory-profiler = "^0.61.0"
+
+# Additional Testing Tools
+httpx = "^0.26.0"
+respx = "^0.20.0"
+factory-boy = "^3.3.0"
+
+[tool.poetry.group.production.dependencies]
+# Production optimizations
+gunicorn = "^21.2.0"
+psycopg2-binary = "^2.9.0"
+redis = "^5.0.0"
+
+# Monitoring in production
+sentry-sdk = "^1.40.0"
+prometheus-client = "^0.19.0"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Tell setuptools where to find the source code
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[project.scripts]
+survey-sentinel = "main:main"
+run-evaluation = "evaluation:run_ragas_evaluation"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "agents: marks tests related to AI agents",
+    "langgraph: marks tests related to LangGraph workflows",
+    "ragas: marks tests related to RAGAS evaluation",
+    "api: marks tests for API endpoints",
+    "ui: marks tests for UI components"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["src", "tests"]
+known_third_party = [
+    "fastapi", "langchain", "langgraph", "openai", "qdrant_client", 
+    "streamlit", "pandas", "numpy", "ragas"
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "chromadb.*",
+    "qdrant_client.*",
+    "ragas.*",
+    "serpapi.*",
+    "tiktoken.*",
+    "langgraph.*"
+]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/__pycache__/*",
+    "*/migrations/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:"
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0103", # Invalid name
+    "R0903", # Too few public methods
+    "R0913", # Too many arguments
+    "W0212", # Access to a protected member
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+# Environment Configuration
+[tool.poetry.extras]
+# Optional feature groups
+full = [
+    "jupyter", "seaborn", "plotly", "matplotlib",
+    "sentry-sdk", "prometheus-client"
+]
+minimal = [
+    "fastapi", "langchain", "langgraph", "openai", "streamlit"
+]
+development = [
+    "jupyter", "black", "pytest", "mypy"
+]
+production = [
+    "gunicorn", "psycopg2-binary", "redis", "sentry-sdk"
+]
+agents = [
+    "langgraph", "langsmith", "langchain-community"
+]
+evaluation = [
+    "ragas", "datasets", "evaluate"
+]

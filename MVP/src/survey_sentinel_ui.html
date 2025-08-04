@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Sentinel - AI-Powered Customer Success Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4c51bf;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-panel {
+            grid-column: 1 / -1;
+            min-height: 500px;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f8fafc;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4c51bf 0%, #667eea 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #4c51bf;
+            box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4c51bf 0%, #667eea 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 81, 191, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: #edf2f7;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #4c51bf;
+            background: #f7fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #4c51bf;
+            background: #edf2f7;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #4c51bf;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error, .success {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            border-left-color: #e53e3e;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border-left-color: #38a169;
+        }
+
+        .flags-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .flag-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .flag-priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background: #fed7d7; color: #c53030; }
+        .priority-medium { background: #feebc8; color: #dd6b20; }
+        .priority-low { background: #c6f6d5; color: #2f855a; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Survey Sentinel</h1>
+            <p>AI-Powered Customer Success Intelligence Platform</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Data Upload Panel -->
+            <div class="panel">
+                <h2>📤 Upload Survey Data</h2>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📊</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="font-size: 0.875rem; color: #718096; margin-top: 8px;">CSV files with survey responses</p>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="vectorCount">-</div>
+                        <div class="stat-label">Survey Responses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="flagCount">-</div>
+                        <div class="stat-label">Flagged Issues</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Panel -->
+            <div class="panel">
+                <h2>⚡ Quick Actions</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary" onclick="checkSystemHealth()">
+                        🔍 System Health Check
+                    </button>
+                    <button class="btn btn-secondary" onclick="viewFlags()">
+                        🚩 View Flagged Responses
+                    </button>
+                    <button class="btn btn-secondary" onclick="runEvaluation()">
+                        📊 Run RAGAS Evaluation
+                    </button>
+                    <button class="btn btn-secondary" onclick="generateSyntheticData()">
+                        🎲 Generate Test Data
+                    </button>
+                </div>
+
+                <div id="quickResults" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="panel chat-panel">
+            <h2>💬 Ask Survey Sentinel AI</h2>
+            
+            <div class="quick-actions">
+                <span class="quick-action" onclick="askQuestion('What are the main customer complaints?')">Main complaints</span>
+                <span class="quick-action" onclick="askQuestion('Which customers seem most unhappy?')">Unhappy customers</span>
+                <span class="quick-action" onclick="askQuestion('What issues need immediate attention?')">Urgent issues</span>
+                <span class="quick-action" onclick="askQuestion('Show me positive feedback patterns')">Positive patterns</span>
+                <span class="quick-action" onclick="askQuestion('Are there billing problems?')">Billing issues</span>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="message assistant">
+                    <div class="message-content">
+                        👋 <strong>Welcome to Survey Sentinel!</strong><br><br>
+                        I'm your AI assistant for customer success intelligence. I can help you:
+                        <br>• Analyze survey responses and identify patterns
+                        <br>• Find unhappy customers who need attention  
+                        <br>• Discover urgent issues requiring immediate action
+                        <br>• Understand what customers love about your product
+                        <br><br>
+                        Upload your survey data above, then ask me anything about your customer feedback!
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <span class="spinner"></span>
+                Analyzing your survey data...
+            </div>
+
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="questionInput" 
+                    class="input-field"
+                    placeholder="Ask about your survey data..." 
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="btn btn-primary" id="askButton" onclick="askQuestion()">Ask AI</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Initialize the application
+        window.onload = function() {
+            checkConnection();
+            loadStats();
+        };
+
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    addMessage('✅ <strong>Connected to Survey Sentinel API!</strong><br>Ready to analyze your survey data.');
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                showError('Cannot connect to Survey Sentinel API. Make sure the server is running at http://localhost:8000');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('vectorCount').textContent = data.total_vectors || '0';
+                    document.getElementById('flagCount').textContent = data.total_flags || '0';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        async function handleFileUpload(file) {
+            if (!file.name.endsWith('.csv')) {
+                showError('Please upload a CSV file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showLoading(true);
+                addMessage(`📤 Uploading and analyzing ${file.name}...`, true);
+
+                const response = await fetch(`${API_BASE}/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(`Successfully processed ${data.processed} survey responses! Found ${data.flagged} issues that need attention.`);
+                    
+                    // Show flagged results if any
+                    if (data.flags && data.flags.length > 0) {
+                        let flagsHtml = '<div class="flags-list"><h4>🚩 Flagged Responses:</h4>';
+                        data.flags.slice(0, 3).forEach(flag => {
+                            flagsHtml += `
+                                <div class="flag-item">
+                                    <div><strong>${flag.customer_name}</strong> 
+                                    <span class="flag-priority priority-${flag.priority}">${flag.priority}</span></div>
+                                    <div style="font-size: 0.875rem; margin-top: 5px;">${flag.response_preview}</div>
+                                </div>
+                            `;
+                        });
+                        if (data.flags.length > 3) {
+                            flagsHtml += `<p><em>...and ${data.flags.length - 3} more flagged responses</em></p>`;
+                        }
+                        flagsHtml += '</div>';
+                        
+                        addMessage(flagsHtml);
+                    }
+
+                    loadStats(); // Refresh stats
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Upload failed');
+                }
+            } catch (error) {
+                showError(`Upload failed: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Chat functionality
+        function addMessage(content, isUser = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = content;
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function askQuestion(question = null) {
+            const input = document.getElementById('questionInput');
+            const query = question || input.value.trim();
+            
+            if (!query) return;
+            
+            addMessage(query, true);
+            if (!question) input.value = '';
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze?query=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                let responseText = data.analysis || 'No analysis available';
+                
+                if (data.context_count !== undefined) {
+                    responseText += `<br><br><small><em>📊 Analyzed ${data.context_count} survey responses</em></small>`;
+                }
+                
+                if (data.sources && data.sources.length > 0) {
+                    responseText += `<br><small><em>📋 Sources: ${data.sources.slice(0, 3).join(', ')}</em></small>`;
+                }
+                
+                addMessage(responseText);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.message.includes('fetch')) {
+                    showError('Cannot connect to Survey Sentinel API. Make sure the server is running.');
+                } else {
+                    showError(`Error: ${error.message}`);
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        }
+
+        // Quick actions
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/system-health`);
+                const data = await response.json();
+                
+                let status = data.system_status === 'healthy' ? '✅ System Healthy' : '⚠️ System Issues';
+                let details = `
+                    <div class="success">
+                        <strong>${status}</strong><br>
+                        Vector Store: ${data.components?.vector_store?.stored_vectors || 0} documents<br>
+                        Recent Flags: ${data.components?.agent_flagging?.recent_flags || 0}<br>
+                        Version: ${data.version || 'Unknown'}
+                    </div>
+                `;
+                
+                document.getElementById('quickResults').innerHTML = details;
+            } catch (error) {
+                showError('Failed to check system health');
+            }
+        }
+
+        async function viewFlags() {
+            try {
+                const response = await fetch(`${API_BASE}/flags-advanced`);
+                const data = await response.json();
+                
+                if (data.flags && data.flags.length > 0) {
+                    let flagsHtml = '<div class="flags-list"><h4>🚩 Recent Flagged Responses:</h4>';
+                    data.flags.slice(0, 5).forEach(flag => {
+                        flagsHtml += `
+                            <div class="flag-item">
+                                <div><strong>${flag.customer_name || 'Unknown'}</strong> 
+                                <span class="flag-priority priority-${flag.priority || 'medium'}">${flag.priority || 'medium'}</span></div>
+                                <div style="font-size: 0.875rem; margin-top: 5px;">${flag.reasoning || 'No reasoning available'}</div>
+                            </div>
+                        `;
+                    });
+                    flagsHtml += '</div>';
+                    document.getElementById('quickResults').innerHTML = flagsHtml;
+                } else {
+                    document.getElementById('quickResults').innerHTML = '<div class="success">No flagged responses found. Great job!</div>';
+                }
+            } catch (error) {
+                showError('Failed to load flagged responses');
+            }
+        }
+
+        async function runEvaluation() {
+            try {
+                showLoading(true);
+                addMessage('🧪 Running RAGAS evaluation...', true);
+                
+                const response = await fetch(`${API_BASE}/run-evaluation`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.evaluation_completed) {
+                    addMessage(`✅ <strong>Evaluation Complete!</strong><br>
+                        Flagging Accuracy: ${(data.flagging_accuracy * 100).toFixed(1)}%<br>
+                        Test Cases: ${data.synthetic_test_cases}<br>
+                        Average Confidence: ${data.average_confidence.toFixed(2)}`);
+                } else {
+                    throw new Error(data.error || 'Evaluation failed');
+                }
+            } catch (error) {
+                showError(`Evaluation failed: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function generateSyntheticData() {
+            try {
+                const response = await fetch(`${API_BASE}/generate-synthetic-data?size=20`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Generated ${data.generated_cases} synthetic test cases for evaluation`);
+                } else {
+                    throw new Error(data.error || 'Generation failed');
+                }
+            } catch (error) {
+                showError(`Failed to generate synthetic data: ${error.message}`);
+            }
+        }
+
+        // Utility functions
+        function showLoading(show = true) {
+            const loading = document.getElementById('loading');
+            const button = document.getElementById('askButton');
+            
+            loading.style.display = show ? 'block' : 'none';
+            button.disabled = show;
+            button.textContent = show ? 'Thinking...' : 'Ask AI';
+        }
+
+        function showError(message) {
+            addMessage(`<div class="error">⚠️ ${message}</div>`);
+        }
+
+        function showSuccess(message) {
+            addMessage(`<div class="success">✅ ${message}</div>`);
+        }
+    </script>
+</body>
+</html>

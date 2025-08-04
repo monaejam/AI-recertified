@@ -1,0 +1,59 @@
+{
+  "question_codes": {
+    "General_Experience": {
+      "full_text": "How can we improve your experience with X?",
+      "category": "General",
+      "weight": "high"
+    },
+    "Portal_Experience": {
+      "full_text": "Thank you for your feedback! Please tell us how we can improve the customer platform Portal for you.",
+      "category": "Product",
+      "weight": "high"
+    },
+    "AM_Business_Review": {
+      "full_text": "Please tell us about your Business Review experience with your Account Manager.",
+      "category": "Relationship",
+      "weight": "medium"
+    },
+    "Technical_Workshop": {
+      "full_text": "Please share your feedback regarding these technical workshops",
+      "category": "Training",
+      "weight": "low"
+    },
+    "CSM_Review": {
+      "full_text": "Please tell us about your review meeting experience with your Customer Success Manager.",
+      "category": "Relationship",
+      "weight": "high"
+    },
+    "Quoting_Ordering": {
+      "full_text": "Is there anything else you would like to tell us about the X Quoting & Ordering process?",
+      "category": "Sales Process",
+      "weight": "medium"
+    },
+    "S_Feedback_general": {
+      "full_text": "Is there anything else you would like to tell us about the X Service Delivery process or Service Delivery team?",
+      "category": "Service",
+      "weight": "high"
+    },
+    "P_Feedback_general": {
+      "full_text": "Is there anything else you would like to tell us about your experience with the product?",
+      "category": "Product",
+      "weight": "high"
+    },
+    "SA_Feedback_general": {
+      "full_text": "Is there anything else you would like to tell us about X Service Assurance team?",
+      "category": "Support",
+      "weight": "high"
+    },
+    "PM_Feedback_general": {
+      "full_text": "Is there anything else you would like to tell us about the Planned Maintenance process?",
+      "category": "Operations",
+      "weight": "medium"
+    },
+    "BILL_Feedback_general": {
+      "full_text": "Is there anything else you would like to tell us about your X Billing & Payment experience?",
+      "category": "Billing",
+      "weight": "high"
+    }
+  }
+}
