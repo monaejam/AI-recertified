@@ -141,7 +141,7 @@ Flag - Stores flagging decisions and reasons
 Provides database initialization functions
 
 
-📝 *Task 5: SDG*
+📝 **Task 5: SDG**
 =====================================================================
 📊 SURVEY SENTINEL - RAGAS EVALUATION RESULTS
 ======================================================================
