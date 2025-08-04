@@ -40,7 +40,7 @@ The system uses LangGraph agents in the flagging_agent.py for intelligent survey
 5.	Makes final flagging decision with confidence scores
 This agentic reasoning ensures that flagging decisions consider full business context, not just sentiment analysis.
 
-📝Task 3: Dealing with the Data(Faker library)
+📝 Task 3: Dealing with the Data(Faker library)
 
 ✅Deliverables
 1.	Survey Responses CSV (survey_responses.csv) - Primary data containing customer feedback with scores and text responses, used for sentiment analysis and issue identification.
@@ -67,7 +67,7 @@ Additional data needs:
 •	Competitor feature comparisons for competitive intelligence responses
 •	Product roadmap data to address feature requests
 
-📝Task 4: The app
+📝 Task 4: The app
 
 ✅main.py - The Central API Server
 This is the FastAPI application that serves as the main entry point. It orchestrates all the components and provides REST endpoints for:
