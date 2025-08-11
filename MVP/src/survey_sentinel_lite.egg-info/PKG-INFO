@@ -1,0 +1,184 @@
+Metadata-Version: 2.4
+Name: survey-sentinel-lite
+Version: 0.5.0
+Summary: AI-Enhanced Survey Sentinel with LangGraph Agent-Based Flagging and RAGAS Evaluation
+Author: MJ
+License: MIT
+Keywords: survey,ai,agents,customer-success,flagging,ragas,evaluation,langgraph
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: <3.12,>=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: pandas>=2.1.4
+Requires-Dist: numpy>=1.26.3
+Requires-Dist: scikit-learn>=1.4.0
+Requires-Dist: plotly>=5.17.0
+Requires-Dist: matplotlib>=3.8.2
+Requires-Dist: torch>=2.0.0
+Requires-Dist: transformers>=4.30.0
+Requires-Dist: sentence-transformers>=2.2.0
+Requires-Dist: fastapi>=0.109.0
+Requires-Dist: uvicorn[standard]>=0.27.0
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: python-multipart>=0.0.6
+Requires-Dist: sqlalchemy>=2.0.25
+Requires-Dist: alembic>=1.13.0
+Requires-Dist: openai<2.0.0,>=1.10.0
+Requires-Dist: langchain<0.3.0,>=0.2.0
+Requires-Dist: langchain-core<0.3.0,>=0.2.0
+Requires-Dist: langchain-openai<0.2.0,>=0.1.0
+Requires-Dist: langchain-community<0.3.0,>=0.2.0
+Requires-Dist: langgraph<0.3.0,>=0.2.20
+Requires-Dist: langsmith<0.2.0,>=0.1.0
+Requires-Dist: qdrant-client>=1.7.0
+Requires-Dist: langchain-qdrant<0.2.0,>=0.1.0
+Requires-Dist: chromadb>=0.4.22
+Requires-Dist: tiktoken>=0.5.2
+Requires-Dist: ragas<0.2.0,>=0.1.0
+Requires-Dist: datasets>=2.14.0
+Requires-Dist: evaluate>=0.4.1
+Requires-Dist: python-docx>=1.1.0
+Requires-Dist: pypdf>=3.17.0
+Requires-Dist: beautifulsoup4>=4.12.2
+Requires-Dist: schedule>=1.2.0
+Requires-Dist: celery>=5.3.0
+Requires-Dist: redis>=5.0.0
+Requires-Dist: prometheus-client>=0.19.0
+Requires-Dist: opentelemetry-api>=1.22.0
+Requires-Dist: opentelemetry-sdk>=1.22.0
+Requires-Dist: opentelemetry-instrumentation-fastapi>=0.43b0
+Requires-Dist: structlog>=23.2.0
+Requires-Dist: requests>=2.31.0
+Requires-Dist: httpx>=0.26.0
+Requires-Dist: aiohttp>=3.9.0
+Requires-Dist: serpapi>=0.1.5
+Requires-Dist: streamlit>=1.30.0
+Requires-Dist: streamlit-aggrid>=0.3.4
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: pyyaml>=6.0.1
+Requires-Dist: toml>=0.10.2
+Requires-Dist: rich>=13.7.0
+Requires-Dist: typer>=0.9.0
+Requires-Dist: click>=8.1.0
+Requires-Dist: faker>=22.2.0
+Requires-Dist: factory-boy>=3.3.0
+Requires-Dist: pytest>=7.4.4
+Requires-Dist: pytest-asyncio>=0.23.3
+Requires-Dist: pytest-cov>=4.1.0
+Requires-Dist: pytest-mock>=3.12.0
+Requires-Dist: asyncpg>=0.29.0
+Requires-Dist: psycopg2-binary>=2.9.0
+Requires-Dist: cryptography>=41.0.0
+Requires-Dist: python-jose[cryptography]>=3.3.0
+Requires-Dist: passlib[bcrypt]>=1.7.4
+
+📝 Task 1:
+✅ Defining your Problem and Audience
+
+Customer Success teams struggle to efficiently identify and prioritize critical customer feedback from thousands of survey responses, risking missed revenue-impacting issues and customer churn.
+
+✅ Why This Is a Problem
+Customer Success teams at B2B SaaS companies already use Qualtrics or similar platforms to collect and tally NPS and satisfaction scores, but those tools stop at basic dashboards and keyword tags. They don’t automatically triage free-text feedback based on customer tier, MRR, or historical health, nor do they draw cross-customer pattern insights in real time. As a result, even though CSMs aren’t reading every comment manually, they still miss emerging “whispers” of churn risk buried in thousands of open-ended responses—and urgent issues from high-value accounts can slip through until it’s too late.
+
+📝 Task 2:
+✅ Articulate your proposed solution
+Survey Sentinel transforms the CSM workflow by providing an AI-powered intelligent triage system that automatically analyzes every survey response in real-time. When survey data is uploaded, AI agents immediately process each response, extracting sentiment, identifying mentioned features, detecting business impact indicators, and cross-referencing against customer history and business value. The system then intelligently flags responses that need attention, providing priority levels
+The system feels like having a team of analysts working 24/7, surfacing critical issues before they escalate and providing CSMs with exactly what they need to know, when they need to know it.
+The experience is conversational and intuitive - CSMs can ask natural language questions like "Which Enterprise customers have raised concerns?" or "What billing issues are customers reporting?" and receive comprehensive, actionable answers backed by specific customer data. 
+
+
+✅ Deliverables
+Tools in the stack:
+1.	LLM: 
+GPT-4-mini(For intelligent flagging decisions) and GPT-3.5-turbo(For analyzing survey responses,For RAG response generation) - Chosen for their balance of performance, cost-effectiveness, and strong instruction-following capabilities for both analysis and conversation.
+2.	Embedding Model:
+ OpenAI text-embedding-3-small - Selected for its superior performance in semantic similarity matching and compact vector size for efficient storage.
+3.	Orchestration:
+ LangChain + LangGraph - LangChain provides robust abstractions for LLM interactions while LangGraph enables sophisticated multi-step agent workflows with state management.
+4.	Vector Database:
+ In-memory store with persistence to SQLite - Chosen for simplicity and speed in proof-of-concept while maintaining upgrade path to Qdrant/Chroma.
+5.	Monitoring:
+ Custom logging with structured metrics tracking - Provides visibility into agent decisions, API performance, and system health without external dependencies.
+6.	Evaluation:
+ RAGAS framework - Industry-standard framework for evaluating RAG performance with metrics like faithfulness, relevancy, and context precision.
+7.	User Interface:
+ FastAPI backend with HTML/JavaScript frontend - FastAPI for high-performance async API operations and vanilla JS for zero-dependency, responsive UI.
+8.	Serving & Inference: 
+Uvicorn ASGI server - Production-grade async server that handles concurrent requests efficiently.
+Agent usage:
+The system uses LangGraph agents in the flagging_agent.py for intelligent survey response prioritization. The agent performs multi-step reasoning:
+1.	Checks customer history for patterns
+2.	Analyzes similar issues across the customer base
+3.	Evaluates business impact based on MRR and tier
+4.	Checks against escalation rules
+5.	Makes final flagging decision with confidence scores
+This agentic reasoning ensures that flagging decisions consider full business context, not just sentiment analysis.
+
+📝Task 3: Dealing with the Data
+
+✅Deliverables
+1.	Survey Responses CSV (survey_responses.csv) - Primary data containing customer feedback with scores and text responses, used for sentiment analysis and issue identification.
+2.	Customer Master Data (customer_master.csv) - Enrichment data providing business context (MRR, tier, tenure) for prioritization decisions.
+3.	Alert Rules JSON (alert_rules.json) - Business logic for escalation triggers based on customer tier, MRR thresholds, and issue types.
+4.	Product Features Ontology (product_features.md) - Domain knowledge for accurate feature extraction and issue categorization from unstructured text.
+5.	Question Codes Mapping (question_codes.json) - Maps survey question codes to full questions and categories for better context.
+External APIs planned:
+•	Web search API (for competitive intelligence when competitors are mentioned)
+•	Slack/Email APIs (for escalation notifications)
+•	CRM integration (future - for full customer context)
+
+✅Chunking strategy:
+The system uses RecursiveCharacterTextSplitter with:
+•	Chunk size: 750 tokens
+•	Overlap: 100 tokens
+•	Length function: tiktoken for accurate GPT-4 token counting
+This strategy is optimal for survey responses because:
+•	Most responses are under 750 tokens (no unnecessary splitting)
+•	100-token overlap preserves context across boundaries
+•	Tiktoken ensures accurate token limits for LLM processing
+Additional data needs:
+•	Historical resolution data to train on what actions successfully retained customers
+•	Competitor feature comparisons for competitive intelligence responses
+•	Product roadmap data to address feature requests
+
+
+📝 Task 5: SDG 
+📊 SURVEY SENTINEL - RAGAS EVALUATION RESULTS
+======================================================================
+
+🎯 AGGREGATE RAGAS METRICS:
+Metric               Score    Interpretation
+--------------------------------------------------
+Faithfulness         0.945    High
+Answer Relevancy     0.950    High
+Context Precision    1.000    High
+Context Recall       1.000    High
+Overall RAG Score    0.974    Excellent
+
+📈 PERFORMANCE SUMMARY:
+Total Questions Tested: 8
+Successful Evaluations: 8
+Average Context Retrieved: 5.0 documents
+Element Coverage: 55.6%
+
+
+📝 Task 6:  The Benefits of Advanced Retrieval
+
+✅1.	Hybrid Search (Keyword + Semantic) - Already implemented! Combines embedding similarity with keyword matching for robust retrieval.
+2.	Metadata Filtering - Already implemented! system can filter by customer tier, date ranges, and other attributes for targeted retrieval.
+3.	Re-ranking with Cross-Encoders - Would improve relevance by re-scoring initial results with more sophisticated models.
+4.	Query Expansion - Use LLM to generate alternative phrasings of queries for better recall.
+5.	Contextual Compression - Reduce retrieved chunks to only relevant portions for more focused context.
+
+
+📝 Task 7: Assessing Performance
+
+Planned improvements for second half:
+1.	Fine-tuned Embeddings - Train on  survey-specific vocabulary for better semantic matching
+2.	Agentic Memory - Add conversation memory for context-aware follow-up questions
+3.	Multi-modal Analysis - Incorporate CSAT scores, usage data, and support tickets

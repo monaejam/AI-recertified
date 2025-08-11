@@ -1,0 +1,33 @@
+customer_id,company_name,tier,mrr,segment,tenure_months,account_owner,industry
+CUST-ENT-001,MegaCorp Industries,Enterprise,125000,Financial Services,36,Sarah Johnson,Banking
+CUST-ENT-002,GlobalTech Solutions,Enterprise,85000,Technology,24,Mike Chen,SaaS
+CUST-ENT-003,National Retail Chain,Enterprise,95000,Retail,18,Lisa Anderson,E-commerce
+CUST-ENT-004,FinanceMax Corp,Enterprise,150000,Financial Services,42,Tom Wilson,Investment
+CUST-ENT-005,DataDrive Systems,Enterprise,110000,Technology,30,Emma Davis,Analytics
+CUST-ENT-006,Continental Logistics,Enterprise,90000,Logistics,22,James Brown,Shipping
+CUST-ENT-007,SecureNet Inc,Enterprise,105000,Technology,28,Rachel Green,Security
+CUST-ENT-008,MediCare Plus,Enterprise,120000,Healthcare,34,David Miller,Insurance
+CUST-ENT-009,EduTech Global,Enterprise,80000,Education,20,Nina Patel,EdTech
+CUST-ENT-010,TelecomGiant,Enterprise,140000,Telecommunications,38,Carlos Rodriguez,Telecom
+CUST-ENT-011,InsureCorp,Enterprise,130000,Insurance,40,Michelle Lee,Insurance
+CUST-ENT-012,BankingPro,Enterprise,115000,Financial Services,32,Robert Taylor,Banking
+CUST-ENT-013,MediaStream Co,Enterprise,100000,Media,26,Jennifer Kim,Streaming
+CUST-MID-005,RegionalBank Co,Mid-Market,35000,Financial Services,15,Alex Turner,Banking
+CUST-MID-008,TechStartup Pro,Mid-Market,25000,Technology,12,Chris Lee,Software
+CUST-MID-011,LocalRetail Group,Mid-Market,30000,Retail,18,Maria Garcia,Retail
+CUST-MID-014,HealthFirst Clinic,Mid-Market,28000,Healthcare,14,Robert Kim,Medical
+CUST-MID-017,Shipping Express,Mid-Market,32000,Logistics,16,Jennifer Wu,Delivery
+CUST-MID-020,CyberShield LLC,Mid-Market,27000,Technology,11,Mark Thompson,Security
+CUST-MID-023,Learning Hub,Mid-Market,29000,Education,13,Sofia Rodriguez,Training
+CUST-MID-026,CloudFirst,Mid-Market,33000,Technology,15,Derek Zhang,Cloud
+CUST-MID-029,LogiTech Solutions,Mid-Market,31000,Logistics,17,Amanda White,Supply Chain
+CUST-MID-032,MarketPro,Mid-Market,26000,Marketing,10,Kevin Park,Digital Marketing
+CUST-SMB-012,SmallBiz Tools,SMB,5000,Technology,8,Jake Martinez,Software
+CUST-SMB-023,LocalStore.com,SMB,3500,Retail,6,Amy Chen,E-commerce
+CUST-SMB-034,QuickAccounting,SMB,4500,Financial Services,10,Brian Johnson,Accounting
+CUST-SMB-045,MiniMart Chain,SMB,4000,Retail,7,Carol White,Retail
+CUST-SMB-056,AppDev Studio,SMB,6000,Technology,9,Dan Brown,Mobile
+CUST-SMB-067,HealthyLife App,SMB,3000,Healthcare,5,Eva Green,Wellness
+CUST-SMB-078,EduApp Pro,SMB,3800,Education,6,Frank Lee,EdTech
+CUST-SMB-089,LocalFinance,SMB,4200,Financial Services,8,Grace Liu,Finance
+CUST-SMB-095,TechSupport Co,SMB,5500,Technology,11,Henry Adams,IT Services

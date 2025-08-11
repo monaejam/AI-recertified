@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from tavily import TavilyClient
 import os
+import requests
+from bs4 import BeautifulSoup
 from dice_roller import DiceRoller
 
 load_dotenv()
@@ -25,9 +27,16 @@ def roll_dice(notation: str, num_rolls: int = 1) -> str:
 Add your own tool here, and then use it through Cursor!
 """
 @mcp.tool()
-def YOUR_TOOL_NAME(query: str) -> str:
-    """YOUR_TOOL_DESCRIPTION"""
-    return "YOUR_TOOL_RESPONSE"
+def fetch_title(url: str) -> str:
+    """Fetch the <title> of a webpage."""
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
+        title = soup.title.string.strip() if soup.title else "(no title)"
+        return title
+    except Exception as e:
+        return f"Error: {e}"
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

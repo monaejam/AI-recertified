@@ -1,0 +1,3 @@
+[console_scripts]
+run-evaluation = evaluation:run_ragas_evaluation
+survey-sentinel = main:main
