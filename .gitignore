@@ -1,3 +1,8 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+location_counts_results.xlsx
 
 # Secrets
 .env
